@@ -28,7 +28,8 @@ SECRET_KEY = 'django-insecure-y8v(e!^=zzk-wie$zep1ohy&!crt=nb(3_h9&gpao4o7vp#9ln
 DEBUG = True
 
 ALLOWED_HOSTS = ['oceanobserver.herokuapp.com',
-                 '127.0.0.1']
+                 '127.0.0.1',
+                 '194.195.123.88']
 
 
 # Application definition
@@ -153,7 +154,7 @@ PLOTLY_COMPONENTS = [
 
 STATIC_URL = '/static/'
 # STATICFILES_LOCATION = 'static'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # STATICFILES_DIRS = ['django_oobs/static/django_oobs/', 'django_oobs/static/', os.path.join(BASE_DIR, 'static')]
 
 # Default primary key field type
