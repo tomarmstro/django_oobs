@@ -595,8 +595,11 @@ def render_tab_content(active_tab, clickData):
         for file in os.listdir(nc_files):
             fig = go.Figure()
             nc_file = xr.open_dataset(nc_files.joinpath('GBRMYR_LTSP_gridded_daily_MC.nc'))
-            print(nc_file['DEPTH'].head(30))
-            fig.add_trace(go.Contour(z = nc_file['CLIM'], x=nc_file['TIME'], transpose=True))
+            # print(nc_file['DEPTH'].head(30))
+            fig.add_trace(go.Contour(z = nc_file['CLIM'], x=nc_file['TIME'], transpose=True, line_width=0))
+            fig['layout']['yaxis']['autorange'] = "reversed"
+            fig.update_xaxes(title_text='Time')
+            fig.update_yaxes(title_text='Depth')
             # fig_layout(fig)
             return html.H3(f'Climatology Plot',
                                    style={"color": "DarkSlateGrey"}), dcc.Graph(id='climatology_tab', figure=fig)
@@ -607,8 +610,11 @@ def render_tab_content(active_tab, clickData):
         for file in os.listdir(nc_files):
             fig = go.Figure()
             nc_file = xr.open_dataset(nc_files.joinpath('GBRMYR_LTSP_gridded_daily_MC.nc'))
-            print(nc_file['DEPTH'].head(30))
-            fig.add_trace(go.Contour(z = nc_file['TEMP'], x=nc_file['TIME'], transpose=True))
+            # print(nc_file['DEPTH'].head(30))
+            fig.add_trace(go.Contour(z = nc_file['TEMP'], x=nc_file['TIME'], transpose=True, line_width=0))
+            fig['layout']['yaxis']['autorange'] = "reversed"
+            fig.update_xaxes(title_text='Time')
+            fig.update_yaxes(title_text='Depth')
             # fig_layout(fig)
             return html.H3(f'Gridded Temperature Plot',
                                    style={"color": "DarkSlateGrey"}), dcc.Graph(id='gridded_temp_tab', figure=fig)
