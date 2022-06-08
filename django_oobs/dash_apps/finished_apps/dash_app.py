@@ -151,6 +151,9 @@ def build_tabs():
             dbc.Tab(label='Daily Temperature', tab_id='daily_temp_tab'),
             dbc.Tab(label='Climatology', tab_id='climatology_tab'),
             dbc.Tab(label='Gridded Temperature', tab_id='gridded_temp_tab'),
+            dbc.Tab(label='Daily Velocity', tab_id='daily_vel_tab'),
+
+
 
             # dcc.Tab(label='Map', value='map'),
         ],
@@ -618,6 +621,57 @@ def render_tab_content(active_tab, clickData):
             # fig_layout(fig)
             return html.H3(f'Gridded Temperature Plot',
                                    style={"color": "DarkSlateGrey"}), dcc.Graph(id='gridded_temp_tab', figure=fig)
+
+    if active_tab == 'daily_vel_tab':
+        PATH = pathlib.Path(__file__).parent
+        nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/nc").resolve()
+        for file in os.listdir(nc_files):
+
+            nc_file = xr.open_dataset(nc_files.joinpath('TAN100_LTSP_VV_daily.nc'))
+            #East plot
+            fig = go.Figure()
+            # print(nc_file['DEPTH'].head(30))
+            fig.add_trace(go.Contour(z = nc_file['UCUR'], x=nc_file['TIME'], transpose=True, line_width=0))
+            fig['layout']['yaxis']['autorange'] = "reversed"
+            fig.update_xaxes(title_text='Time')
+            fig.update_yaxes(title_text='Depth')
+            # fig_layout(fig)
+
+            # North plot
+            fig2 = go.Figure()
+            # print(nc_file['DEPTH'].head(30))
+            fig2.add_trace(go.Contour(z=nc_file['VCUR'], x=nc_file['TIME'], transpose=True, line_width=0))
+            fig2['layout']['yaxis']['autorange'] = "reversed"
+            fig2.update_xaxes(title_text='Time')
+            fig2.update_yaxes(title_text='Depth')
+            # fig_layout(fig)
+
+            #Cross Shelf plot
+            fig3 = go.Figure()
+            # print(nc_file['DEPTH'].head(30))
+            fig3.add_trace(go.Contour(z=nc_file['UU'], x=nc_file['TIME'], transpose=True, line_width=0))
+            fig3['layout']['yaxis']['autorange'] = "reversed"
+            fig3.update_xaxes(title_text='Time')
+            fig3.update_yaxes(title_text='Depth')
+            # fig_layout(fig)
+
+            #Alongshore plot
+            fig4 = go.Figure()
+            # print(nc_file['DEPTH'].head(30))
+            fig4.add_trace(go.Contour(z=nc_file['VV'], x=nc_file['TIME'], transpose=True, line_width=0))
+            fig4['layout']['yaxis']['autorange'] = "reversed"
+            fig4.update_xaxes(title_text='Time')
+            fig4.update_yaxes(title_text='Depth')
+            # fig_layout(fig)
+
+            return html.H3(f'Daily Velocity Plot (East)', style={"color": "DarkSlateGrey"}), \
+                   dcc.Graph(id='daily_vel_tab', figure=fig), \
+                   html.H3(f'Daily Velocity Plot (North)', style={"color": "DarkSlateGrey"}), \
+                   dcc.Graph(id='daily_vel_tab', figure=fig2), \
+                   html.H3(f'Daily Velocity Plot (Cross-Shelf)', style={"color": "DarkSlateGrey"}), \
+                   dcc.Graph(id='daily_vel_tab', figure=fig3), \
+                   html.H3(f'Daily Velocity Plot (Alongshore)', style={"color": "DarkSlateGrey"}), \
+                   dcc.Graph(id='daily_vel_tab', figure=fig4)
 
 
 
