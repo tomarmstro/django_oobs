@@ -1,6 +1,6 @@
 # django_oobs
  
-#Steps:
+# Steps:
 ## Log into github
 ## Options dropdown (top right user icon) -> Settings
 ## Developer settings (bottom of left hand menu) -> Personal access tokens
