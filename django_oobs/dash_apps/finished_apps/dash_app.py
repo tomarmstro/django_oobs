@@ -6,6 +6,7 @@ from django_plotly_dash import DjangoDash
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_daq as daq
 import dash_bootstrap_components as dbc
 import os
 from plotly.subplots import make_subplots
@@ -20,34 +21,35 @@ import getLTSPname
 import extractVariable
 import matplotlib.pyplot as plt
 import numpy as np
-# from tqdm import tqdm, trange
-# from time import sleep
-# from tqdm import tqdm
-# import json
 import pathlib
 
 # ---------------------------------------------------------------
 # Constants etc
-external_stylesheets = [dbc.themes.LUMEN]
-# https://hellodash.pythonanywhere.com/theme_change_components
+external_stylesheets = [dbc.themes.LUMEN, "assets/base-styles.css"]
 pio.templates.default = "simple_white"
 px.defaults.color_continuous_scale = px.colors.sequential.Blackbody
 
 DATA_SKIP = 500
-# DATA_PATH = r"37\\"
-# DATA_PATH = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/'
 TRANSPARENT_COLOUR = "rgba(0, 0, 0, 0)"
-DARK_BLUE_COLOUR = "#1e2130"
+IMOS_DEEP_BLUE_COLOUR = "#3b6e8f"
+IMOS_SEA_BLUE_COLOUR = "#54bceb"
+IMOS_SAND_COLOUR = "#d9d7bd"
+IMOS_MID_GREY_COLOUR = "#3c3c3c"
+
+BODY_BACKGROUND_COLOUR = IMOS_SAND_COLOUR
+BODY_BORDER_COLOUR = IMOS_MID_GREY_COLOUR
+
+DEGREES_SYMBOL = u'\xb0'
+
+PATH = pathlib.Path(__file__).parent
 
 pd.set_option('display.max_rows', None)
-app = DjangoDash('dash_app', external_stylesheets=external_stylesheets)
-
-
+app = DjangoDash('data', external_stylesheets=external_stylesheets)
 
 MOORINGS = ['GBRMYR', 'GBRPPS', 'GBRLSL', 'GBRHIS', 'GBROTE', 'GBRCCH', 'NWSBAR', 'NWSLYN', 'NWSROW', 'NWSBRW',
             'NRSYON']
-print("Running Dashboard Prototype...")
 map_selection = "NRSYON"
+active_tab = 'vcur_tab'
 
 # Create map
 def render_map():
@@ -67,34 +69,19 @@ def render_map():
                     'Longitude': False,
                     'Group': False
                     },
-
-    )
-                      .update_layout(
-        {
+        )
+        .update_layout(
+            {
             "font": {"color": "white"},
             'plot_bgcolor': TRANSPARENT_COLOUR,
             'paper_bgcolor': TRANSPARENT_COLOUR,
-
-
-        },
-        mapbox_style="open-street-map", height=750, width=1100,
+            },
+        mapbox_style="open-street-map", height=750, width=960,
         # Remove legend
         showlegend=False, ),
         # stop zoomable map
         config={'scrollZoom': False}
         )]
-
-
-# def render_dropdown():
-#     mooring_options = []
-#     for option in MOORINGS:
-#         mooring_options.append({'label': option, 'value': option})
-#     return dcc.Dropdown(
-#         id='my_dropdown',
-#         options=mooring_options,
-#         value=MOORINGS[10],
-#         style={'width': "80%"})
-
 
 # Get files
 def collect_working_files(variable):
@@ -108,154 +95,125 @@ def collect_working_files(variable):
             print('incorrect variable for collecting files')
         print(LTSP_filename.split("timeseries/", 1)[1])
         working_files.append(LTSP_filename)
-        # working_files = ['http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/QLD/NWSBRW/hourly_timeseries/IMOS_ANMN-QLD_VZ_20190731_NWSBRW_FV02_velocity-hourly-timeseries_END-20210505_C-20211221.nc']
     return working_files
-
-
-##########################################################
-# vel_working_files = collect_working_files('velocity-hourly')
-# agg_working_files = collect_working_files('aggregated')
-# print(agg_working_files[0])
-##########################################################
-
-
-def get_local_files(dropdown_selection):
-    local_files = []
-    for file in os.listdir(DATA_PATH):
-        if file.startswith(dropdown_selection):
-            local_files.append(file)
-
-    local_file_ds = xr.open_dataset(r"37\\NRSYON-2006_ADCP_vel.nc")
-    local_file_df = local_file_ds.to_dataframe()
-    return local_file_df
-
-
-def get_local_files2(dropdown_selection):
-    local_files = []
-    for file in os.listdir(DATA_PATH):
-        if file.startswith(dropdown_selection):
-            local_files.append(file)
-
-    local_file_ds = xr.open_dataset(r"37\\NWSROW-2002_ADCP_2.nc")
-    local_file_df = local_file_ds.to_dataframe()
-    return local_file_df
-
 
 def build_tabs():
     return dbc.Tabs(
         [
-            dbc.Tab(render_map(),
-                    label='map_select', tab_id='map_tab', ),
-            dbc.Tab(label='Velocity', tab_id='vcur_tab'),
-            dbc.Tab(label='Temperature', tab_id='temp_tab'),
-            dbc.Tab(label='Daily Temperature', tab_id='daily_temp_tab'),
-            dbc.Tab(label='Climatology', tab_id='climatology_tab'),
-            dbc.Tab(label='Gridded Temperature', tab_id='gridded_temp_tab'),
-            dbc.Tab(label='Daily Velocity', tab_id='daily_vel_tab'),
+            # dbc.Tab(render_map(),
+            #         label='map_select', tab_id='map_tab', ),
+            dbc.Tab(label='Velocity', tab_id='vel_tab', tabClassName="flex-grow-1 text-center"),
+            dbc.Tab(label='NE Velocity', tab_id='vcur_tab', tabClassName="flex-grow-1 text-center"),
+            dbc.Tab(label='Temperature', tab_id='temp_tab', tabClassName="flex-grow-1 text-center"),
+            dbc.Tab(label='Daily Temperature', tab_id='daily_temp_tab', tabClassName="flex-grow-1 text-center"),
+            dbc.Tab(label='Climatology', tab_id='climatology_tab', tabClassName="flex-grow-1 text-center"),
+            dbc.Tab(label='Gridded Temperature', tab_id='gridded_temp_tab', tabClassName="flex-grow-1 text-center"),
 
-
-
-            # dcc.Tab(label='Map', value='map'),
         ],
         id='tabs',
-        active_tab="map_tab",
-        style={'width': "100%"},
-        className="custom-tabs"
+        active_tab="vel_tab",
+        # style={'width': "100%"},
+        className="custom-tabs",
     )
-
-
-def build_banner():
-    return html.Div(
-        id="banner",
-        className="banner",
-        children=[
-            html.Div(
-                id="banner-text",
-                children=[
-                    html.H5("Ocean Observer Dashboard"),  ###Title
-                    html.H6("Hourly IMOS Data"),  ###Heading under title
-                ],
-            ),
-            html.Div(
-                id="banner-logo",
-                children=[
-                    html.A(
-                        html.Button(children="DATA SOURCE"),  ####Placeholder Button for something
-                        href="https://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/QLD/catalog.html",
-                        ###Url the button takes you to
-                    ),
-                    # html.Button(
-                    #     id="learn-more-button", children="About/Help", n_clicks=0 ###About/Help Button top right
-                    # ),
-                    html.A(
-                        html.Img(id="aims_logo", src=app.get_asset_url("aims_logo.jpg")),  #### logo top right
-                        href="https://data.aims.gov.au/moorings/",
-                    ),
-                    html.A(
-                        html.Img(id="imos_logo", src=app.get_asset_url("imos_logo.png")),  #### logo top right
-                        href="https://imos.org.au/",
-                    ),
-                ],
-            ),
-        ],
-    )
-
 
 def fig_layout(fig):
     fig.update_layout(
-        xaxis=dict(
-            rangeselector=dict(
-                buttons=list([
-                    dict(count=1,
-                         label="1m",
-                         step="month",
-                         stepmode="backward"),
-                    dict(count=6,
-                         label="6m",
-                         step="month",
-                         stepmode="backward"),
-                    dict(count=1,
-                         label="YTD",
-                         step="year",
-                         stepmode="todate"),
-                    dict(count=1,
-                         label="1y",
-                         step="year",
-                         stepmode="backward"),
-                    dict(step="all")
-                ])
-            ),
-            rangeslider=dict(
-                visible=True
-            ),
-            type="date"
-        )
+        plot_bgcolor=BODY_BACKGROUND_COLOUR,
+        paper_bgcolor=BODY_BACKGROUND_COLOUR,
+        font_color=BODY_BORDER_COLOUR
+        # plot_bgcolor = IMOS_MID_GREY_COLOUR,
+        # paper_bgcolor = IMOS_MID_GREY_COLOUR,
+        # font_color = IMOS_SAND_COLOUR
     )
-    fig.update_traces(marker=dict(size=12,
-                                  line=dict(width=2,
-                                            color='DarkSlateGrey')),
-                      selector=dict(mode='markers'))
 
+def colourscale_rangeslider():
+    return html.Div(
+        html.Div(
+            [
+                dcc.Input(type='text', value=0),
+                dcc.RangeSlider(
+                    id='condition-range-slider',
+                    min=0,
+                    max=30,
+                    value=[10, 15],
+                    allowCross=False
+                ),
+                dcc.Input(type='text', value=100)
+            ],
+            style={"display": "grid", "grid-template-columns": "10% 40% 10%"}),
+        style={'width': '20%'}
+    )
+
+def more_info_button():
+    return dbc.Button("Info",
+                id="more-info-modal",
+                color='info',
+                style={"color": "DarkSlateGrey",
+                       "display": "inline-block",
+                       "width": "10%",
+                       "margin-right": "150px",
+                       "verticalAlign": "top",
+                       "right": "0px",
+                       "position": "absolute"})
+
+
+def build_velocity_tabs():
+    return dbc.Tabs(
+        [
+            dbc.Tab(label='Local Velocity', tab_id='local_vel_tab', tabClassName="flex-grow-1 text-center"),
+            dbc.Tab(label='NE Velocity', tab_id='ne_vel_tab', tabClassName="flex-grow-1 text-center"),
+        ],
+        id='velocity_tabs',
+        active_tab='ne_vel_tab',
+        style={'width': "100%", 'height': "100%"},
+        className="custom-tabs"
+    )
+
+vel_tabs = html.Div(
+    [
+        dbc.Tabs(
+            [
+                dbc.Tab(label="Tab 1", tab_id="tab-1"),
+                dbc.Tab(label="Tab 2", tab_id="tab-2"),
+            ],
+            id="vel_tabs",
+            active_tab="tab-1",
+        ),
+        html.Div(id="content"),
+    ]
+)
 
 ##################### MODAL #######################
-# modal = html.Div(
-#     [
-#         dbc.Button("Extra large modal", id="open-xl", n_clicks=0),
+map_modal = html.Div(
+    [
+        dbc.Row(dbc.Button("Select Mooring", id="open-map-modal", color='primary', size="lg"), justify="center", align="center"),
+        dbc.Modal(
+            [
+                dbc.ModalHeader("Please select a mooring location"),
+                # dbc.ModalBody(f"Selected mooring: {map_selection}"),
+                dbc.ModalBody(render_map()),
+                dbc.ModalFooter(dbc.Button("Close", id="close-dismiss")),
+            ],
+            id="map_modal",
+            style={"max-width": "none", "width": "90%", }, )
+            # is_open=False,
+        # ),
+    ]
+)
 
-#         dbc.Modal(
-#             # dbc.ModalBody(["Map of IMOS moorings.",html.Br(),"Please select a mooring location."]),
-#             html.Div(render_map(),
-#         className="three columns", style={'display': 'inline-block', 'width': '80%'},
-#         ),
-#             # className="three columns", style={'display': 'inline-block', 'width': '80%'},
-#             id="modal-xl",
-#             size="xl",
-#             centered=True,
-#             is_open=False,
-#             fade=False,
-#                 ),
-#             ]
-#         )
+
+
+@app.callback(
+    Output(component_id="map_modal", component_property="is_open"),
+    [Input(component_id="open-map-modal", component_property="n_clicks"),
+     Input(component_id="close-dismiss", component_property="n_clicks")],
+    State(component_id="map_modal", component_property="is_open"),
+)
+def toggle_modal(n_open, n_close, is_open):
+    if n_open or n_close:
+        return not is_open
+    return is_open
+
 
 # ---------------------------------------------------------------
 # Layout
@@ -263,35 +221,27 @@ app.layout = html.Div(
     # style={"backgroundColor": DARK_BLUE_COLOUR, 'display': 'inline-block', 'width': '100%'},
     id="big-app-container",
     children=[
-        # build_banner(),
-        # render_dropdown(),
-        # html.Br(),  ### Add a space
+        html.Br(),
+        map_modal,
+        html.Br(),
         build_tabs(),
-        html.Div(id='tab_content'
-                 , className="p-4", style={'display': 'inline-block', 'width': '100%'}
-                 ),
-        # html.Div(html.Pre(id='click-data'),
-        #          className="three columns", style={'display': 'inline-block', 'width': '80%'},
-        #     ),
-        # modal,
-    ],
+        # velocity_toggle(),
+        # colourscale_rangeslider(),
+        html.Div(id='tab_content',
+                 className="p-4"
+        ),
+        # vel_tabs,
+
+
+    ], style={'display': 'inline-block',
+                        'width': '100%',
+                        # 'height': '800px',
+                        'backgroundColor': BODY_BACKGROUND_COLOUR,
+                        }
 )
 
 
-######################################
-###### MODAL ##########################
-# def toggle_modal(n1, is_open):
-#     if n1:
-#         return not is_open
-#     return is_open
 
-# app.callback(
-#     Output("modal-xl", "is_open"),
-#     Input("open-xl", "n_clicks"),
-#     State("modal-xl", "is_open"),
-# )(toggle_modal)
-
-########################################
 
 # ---------------------------------------------------------------
 # Get tab content
@@ -302,385 +252,274 @@ app.layout = html.Div(
     Input(component_id="moorings_map", component_property="clickData"))
 # Input(component_id='selected_time', component_property='active_time')])
 def render_tab_content(active_tab, clickData):
-    # print((LTSP_filename.split("IMOS/ANMN",1)[1])[5:11])
-    # state = (LTSP_filename.split("IMOS/ANMN",1)[1])[1:4]
-    # mooring = (LTSP_filename.split("IMOS/ANMN",1)[1])[5:11]
-    # active_tab = 'salinity_tab'
+    fig = go.Figure()
+    fig_layout(fig)
+    fig2 = go.Figure()
+    fig_layout(fig2)
+
+    data_dir = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data").resolve()
     map_selection = 'NRSYON'
     if clickData is not None:
         map_selection = clickData['points'][0]['hovertext']
         print(f"{map_selection} selected from the map.")
-
     print(active_tab)
-    # print(collect_working_files())
-    if active_tab == 'map_tab':
-        return html.H3(f'Selected mooring: {map_selection}', style={"color": "DarkSlateGrey"})
-    # if active_tab == 'bfgdbfgbfg':
-    #     return render_map()
-    file_counter = 0
-    # fig_layout()
 
-    # fig = go.Figure()
-    # figs = make_subplots(rows=4, cols=1)
-    # for file in os.listdir(DATA_PATH):
-    # working_files = collect_working_files('velocity-hourly')
-    # for file in vel_working_files:
-    # for file in vel_working_files:
-    #     try:
-    #         print('dropdown selection: ', dropdown_selection)
-    #         print('file: ', (file.split("IMOS/ANMN",1)[1])[5:11])
-    #         if (file.split("IMOS/ANMN",1)[1])[5:11] == (str(dropdown_selection)):
-    #             print("getting file")
-    #             file_counter += 1
-    #             # fig = go.Figure(layout_yaxis_range=[-0.4,0.3])
-    #             fig = go.Figure()
-    #             ds = xr.open_dataset(file)
+    # if active_tab == 'vel_tab':
+    #     return html.Div(id="vel_container",
+    #         children=[
+    #             build_velocity_tabs(),
+    #             html.H3('HERE'),
+    #             html.H6('AND HERE'),
+    #             html.Div(id='vel_tab_content',
+    #              className="p-6"
+    #              ),
+    #             html.H3('StILL')])
 
-    #             # df = df.groupby('TIME').mean().reset_index() #Averages per unique time
-    #             print('plots created')
-    #             print('active tab :', active_tab)
-    #             # print(f"Loading file number {file_counter}: {day_avg.instrument_id} #{day_avg.instrument_index}")
-    #             if active_tab == 'vcur_tab':
-    #                 # print(file)
-    #                 #LTSP
-    #                 print(f"Creating {dropdown_selection} dataframe...")
-    #                 df = ds.VCUR.to_dataframe()
-    #                 print(f"Converting to daily timeseries...")
-    #                 day_avg = df.groupby([df['TIME']]).mean()
+    if active_tab == 'vel_tab':
+        # return html.Div(daily_velocity(map_selection, fig, fig2), vel_tabs)
+        return vel_tabs, html.Div(id='content')
 
-    #                 # # shift the index forward 30min to centre the bins on the hour
-    #                 # df_cell.index = df_cell.index + pd.Timedelta(minutes=30)
-
-    #                 # day_avg = df.groupby([df['TIME'].dt.date]).mean()
-    #                 print(f"Creating plot of {active_tab} at {dropdown_selection}...")
-    #                 fig.add_trace(go.Scatter(x=day_avg.index, y=day_avg.VCUR, name="LTSP"))
-
-    #                 #ADCP1
-    #                 local_df = get_local_files(dropdown_selection)
-    #                 # local_df = local_df.VCUR
-    #                 # local_df.index = pd.to_datetime(df.index)
-    #                 # [ts.hour for ts in local_df.index]
-    #                 # local_day_avg = local_df.groupby(local_df.hour).mean()
-    #                 # local_day_avg = local_df.groupby(local_df.index.get_level_values('TIME')).mean()
-    #                 local_time_avg = local_df.groupby(local_df.index.get_level_values('TIME')).mean()
-    #                 local_hour_avg = local_time_avg.resample('h').VCUR.mean()
-    #                 # local_hour_avg_df = local_time_avg.to_frame()
-    #                 local_hour_avg_df = local_hour_avg.to_frame()
-    #                 local_hour_avg_df = local_hour_avg_df[1:]
-    #                 print(local_hour_avg_df.VCUR.head())
-    #                 fig.add_trace(go.Scatter(x=local_hour_avg_df.index, y=local_hour_avg_df.VCUR, name="NEMO"))
-
-    #                 #getVariable
-    #                 # file = 'http://thredds.aodn.org.au/thredds/dodsC/IMOS/ANMN/QLD/NWSROW/hourly_timeseries/IMOS_ANMN-QLD_VZ_20190804_NWSROW_FV02_velocity-hourly-timeseries_END-20210509_C-20211222.nc'
-    #                 # extracted_ds = extractVariable.getVariable(file, 'VCUR', False)
-    #                 # print(extracted_ds.head())
-    #                 # print(extracted_ds.tail())
-    #                 # extract_df = extracted_ds.VCUR.to_dataframe()
-    #                 # print(extract_df.VCUR[1000:1020])
-    #                 # # print(extract_df.VCUR.tail())
-    #                 # fig.add_trace(go.Scatter(x=extract_df.index.get_level_values('TIME'), y=extract_df.VCUR, name="extracted"))
-
-    #                 # print(day_avg.head())
-    #                 # fig = px.line(day_avg.VCUR)
-    #                 fig_layout(fig)
-    #                 # print('vcur plotted')
-    #                 return html.H3(f'VCUR line chart for {dropdown_selection}', style={"color": "white"}), dcc.Graph(id='vcur_tab', figure=fig)
-    #                 # figs.add_trace((go.Scatter(x=list(df['time'][::DATA_SKIP]), y=list(sal[::DATA_SKIP]))), row=file_counter, col=1)
-    #             elif active_tab == 'ucur_tab':
-    #                 print(f"Creating {dropdown_selection} dataframe...")
-    #                 df = ds.UCUR.to_dataframe()
-    #                 print(f"Converting to daily timeseries...")
-    #                 day_avg = df.groupby([df['TIME']]).mean()
-    #                 # day_avg = df.groupby([df['TIME'].dt.date]).mean()
-    #                 print(f"Creating plot of {active_tab} at {dropdown_selection}...")
-    #                 fig.add_trace(go.Scatter(x=day_avg.index, y=day_avg.UCUR, name="LTSP"))
-
-    #                 #ADCP1
-    #                 local_df = get_local_files(dropdown_selection)
-    #                 local_df = local_df[local_df.VCUR_quality_control == 1]
-    #                 # local_df = local_df.VCUR
-    #                 # local_df.index = pd.to_datetime(df.index)
-    #                 # [ts.hour for ts in local_df.index]
-    #                 # local_day_avg = local_df.groupby(local_df.hour).mean()
-    #                 # local_day_avg = local_df.groupby(local_df.index.get_level_values('TIME')).mean()
-    #                 local_time_avg = local_df.groupby(local_df.index.get_level_values('TIME')).mean()
-    #                 local_hour_avg = local_time_avg.resample('h').UCUR.mean()
-    #                 local_hour_avg_df = local_hour_avg.to_frame()
-    #                 local_hour_avg_df = local_hour_avg_df[1:]
-    #                 print(local_hour_avg_df.UCUR.head())
-    #                 fig.add_trace(go.Scatter(x=local_hour_avg_df.index, y=local_hour_avg_df.UCUR, name="ADCP1"))
-
-    #                 #ADCP2
-    #                 local_df2 = get_local_files2(dropdown_selection)
-    #                 local_df2 = local_df2[local_df2.VCUR_quality_control == 1]
-    #                 # local_df = local_df.VCUR
-    #                 # local_day_avg2 = local_df2.groupby(local_df2.index.get_level_values('TIME').date).mean()
-    #                 local_time_avg2 = local_df2.groupby(local_df2.index.get_level_values('TIME')).mean()
-    #                 local_hour_avg2 = local_time_avg2.resample('h').UCUR.mean()
-    #                 local_hour_avg_df2 = local_hour_avg2.to_frame()
-    #                 local_hour_avg_df2 = local_hour_avg_df2[1:]
-    #                 print(local_hour_avg_df2.UCUR.head())
-    #                 fig.add_trace(go.Scatter(x=local_hour_avg_df2.index, y=local_hour_avg_df2.UCUR, name="ADCP2"))
-    #                 # fig.add_trace(go.Scatter(x=local_df2.index, y=local_df2.VCUR, name="ADCP2_full"))
-    #                 # get_local_files2
-    #                 # local_file_df = get_local_files(dropdown_selection)
-    #                 # local_file_ds = xr.open_dataset(r"37\\NWSROW-2104_ADCP.nc")
-    #                 fig_layout(fig)
-    #                 return html.H3(f'UCUR line chart for {dropdown_selection}', style={"color": "white"}), dcc.Graph(id='ucur_tab', figure=fig)
-
-    #     except AttributeError as e:
-    #        print("Attribute error: Missing data")
-    #        print(f"Error: {e}")
-    #        pass
-    # for file in agg_working_files:
-    #     try:
-    #         if (file.split("IMOS/ANMN",1)[1])[5:11] == (str(dropdown_selection)):
-    #             print("getting file")
-    #             file_counter += 1
-    #             fig = go.Figure()
-    #             ds = xr.open_dataset(file)
-    #             if active_tab == 'temp_tab':
-    #                 print(ds.head())
-    #                 print(f"Creating {dropdown_selection} dataframe...")
-    #                 # ds = ds.loc["2020-03-01": "2020-06-01", "IA"]
-    #                 start = np.datetime64('2020-03-04T00:00')
-    #                 stop = np.datetime64('2020-06-07T00:00')
-    #                 # ds.TIME[-10000:]
-    #                 # ds.sel(time=slice("2020-03-01", "2020-06-01"))
-    #                 # ds.sel(ds.TIME=slice("2020-03-01", "2020-06-01"))
-    #                 # df1 = ds.TEMP[-10000:].to_dataframe()
-    #                 df2 = ds.TEMP[-10000:].to_dataframe()
-    #                 # df2 = ds.TEMP[-45000:-40000].to_dataframe()
-    #                 # df2 = ds.TEMP['20200301':'20201001'].to_dataframe()
-    #                 # start = df2.index.searchsorted(datetime.datetime(2020, 4, 3))
-    #                 # end = df2.index.searchsorted(datetime.datetime(2020, 12, 11))
-
-    #                 local_df = get_local_files(dropdown_selection)
-    #                 print(f"Converting to daily timeseries...")
-    #                 # day_avg = df.groupby([df['TIME'].dt.date]).mean()
-    #                 print(f"Creating plot of {active_tab} at {dropdown_selection}...")
-    #                 # fig.add_trace(go.Scatter(x=df1.TIME, y=df1.TEMP))
-    #                 fig.add_trace(go.Scatter(x=df2.TIME, y=df2.TEMP))
-    #                 fig.add_trace(go.Scatter(x=local_df.index[::DATA_SKIP], y=local_df.TEMP[::DATA_SKIP]))
-    #                 fig_layout(fig)
-    #                 print("Plot created")
-
-    # fig = px.line(day_avg.VCUR)
-    # return html.H3(f'TEMP line chart for {dropdown_selection}', style={"color": "white"}), dcc.Graph(id='temp_tab', figure=fig)
-    # except AttributeError as e:
-    #    print("Attribute error: Missing data")
-    #    print(f"Error: {e}")
-    #    pass
     if active_tab == 'vcur_tab':
-        fig = go.Figure()
-        fig2 = go.Figure()
-        PATH = pathlib.Path(__file__).parent
-        # csv_files = PATH.joinpath("../oceanobs/csv/vcur").resolve()
-        csv_files = PATH.joinpath(os.path.abspath(os.curdir) + "/csv/vcur").resolve()
-        # csv_files = r"app/csv/"
-        for file in os.listdir(csv_files):
-            mooring_site = file[0:6]
-            print(file)
-            # if file[0:5] == map_selection:
-            #     csv_file = pd.read_csv(map_selection + '_vel.csv')
-            # print(file[0:6])
-            if mooring_site in MOORINGS and mooring_site == map_selection:
-                csv_file = pd.read_csv(csv_files.joinpath(map_selection + '_vcur.csv'))
-                print(file[0:6] + " loaded.")
-                # csv_file = pd.read_csv('data_csv.csv')csv_file = pd.read_csv('data_csv.csv')
-                # print(csv_file)
-                # csv_df = pd.DataFrame(csv_file)
-                fig.add_trace(go.Scatter(x=csv_file['TIME'], y=csv_file['VCUR'], name="NEMO"))
-                print("Trace added...")
-                # print("Step 7...")
-                # fig_layout(fig)
-                print("Layout complete...")
-
-                csv_files = PATH.joinpath(os.path.abspath(os.curdir) + "/csv/ucur").resolve()
-                csv_file2 = pd.read_csv(csv_files.joinpath(map_selection + '_ucur.csv'))
-                print(file[0:6] + " loaded.")
-                # csv_file = pd.read_csv('data_csv.csv')csv_file = pd.read_csv('data_csv.csv')
-                # print(csv_file)
-                # csv_df = pd.DataFrame(csv_file)
-                fig2.add_trace(go.Scatter(x=csv_file2['TIME'], y=csv_file2['UCUR'], name="NEMO"))
-                print("Trace added...")
-                # print("Step 7...")
-                # fig_layout(fig2)
-                print("Layout complete...")
-                return html.H3(f'VCUR line chart for {map_selection}', style={"color": "DarkSlateGrey"}), dcc.Graph(
-                    figure=fig), html.H3(f'UCUR line chart for {map_selection}', style={"color": "DarkSlateGrey"}), dcc.Graph(
-                    figure=fig2)
-    if active_tab == 'ucur_tab':
-        fig = go.Figure()
-        PATH = pathlib.Path(__file__).parent
-        # csv_files = PATH.joinpath("../oceanobs/csv/ucur").resolve()
-        csv_files = PATH.joinpath(os.path.abspath(os.curdir) + "/csv/ucur").resolve()
-        # csv_files = r"app/csv/"
-        for file in os.listdir(csv_files):
-            mooring_site = file[0:6]
-            print(file)
-            # if file[0:5] == map_selection:
-            #     csv_file = pd.read_csv(map_selection + '_vel.csv')
-            # print(file[0:6])
-            if mooring_site in MOORINGS and mooring_site == map_selection:
-                csv_file = pd.read_csv(csv_files.joinpath(map_selection + '_ucur.csv'))
-                print(file[0:6] + " loaded.")
-                # csv_file = pd.read_csv('data_csv.csv')csv_file = pd.read_csv('data_csv.csv')
-                # print(csv_file)
-                # csv_df = pd.DataFrame(csv_file)
-                fig.add_trace(go.Scatter(x=csv_file['TIME'], y=csv_file['UCUR'], name="NEMO"))
-                print("Trace added...")
-                # print("Step 7...")
-                # fig_layout(fig)
-                print("Layout complete...")
-
-                return html.H3(f'UCUR line chart for {map_selection}', style={"color": "DarkSlateGrey"}), dcc.Graph(
-                    id='ucur_tab', figure=fig)
+        return ne_velocity(map_selection, fig, fig2)
 
     if active_tab == 'temp_tab':
-        fig = go.Figure()
-        PATH = pathlib.Path(__file__).parent
-        # csv_files = PATH.joinpath("../oceanobs/csv/ucur").resolve()
-        csv_files = PATH.joinpath(os.path.abspath(os.curdir) + "/csv/temp").resolve()
-        # csv_files = r"app/csv/"
-        for file in os.listdir(csv_files):
-            mooring_site = file[0:6]
-            print(file)
-            # if file[0:5] == map_selection:
-            #     csv_file = pd.read_csv(map_selection + '_vel.csv')
-            # print(file[0:6])
-            if mooring_site in MOORINGS and mooring_site == map_selection:
-                csv_file = pd.read_csv(csv_files.joinpath(map_selection + '_temp.csv'))
-                print(file[0:6] + " loaded.")
-                # csv_file = pd.read_csv('data_csv.csv')csv_file = pd.read_csv('data_csv.csv')
-                # print(csv_file)git
-                # csv_df = pd.DataFrame(csv_file)
-                fig.add_trace(go.Scatter(x=csv_file['TIME'], y=csv_file['TEMP'], name="NEMO"))
-                print("Trace added...")
-                # print("Step 7...")
-                # fig_layout(fig)
-                print("Layout complete...")
-
-                return html.H3(f'TEMP line chart for {map_selection}', style={"color": "DarkSlateGrey"}), dcc.Graph(
-                    id='ucur_tab', figure=fig)
+        return temperature(map_selection, fig)
 
     if active_tab == 'daily_temp_tab':
-        fig = go.Figure()
-        PATH = pathlib.Path(__file__).parent
-        # csv_files = PATH.joinpath("../oceanobs/csv/temp").resolve()
-        csv_files = PATH.joinpath(os.path.abspath(os.curdir) + "/csv/daily_temp").resolve()
-        # csv_files = r"app/csv/"
-        for file in os.listdir(csv_files):
-            mooring_site = file[0:6]
-            print(file)
-            # if file[0:5] == map_selection:
-            #     csv_file = pd.read_csv(map_selection + '_vel.csv')
-            # print(file[0:6])
-            if mooring_site in MOORINGS and mooring_site == map_selection:
-                csv_file = pd.read_csv(csv_files.joinpath(map_selection + '_temp_dayavg.csv'))
-                print(file[0:6] + " loaded.")
-                # csv_file = pd.read_csv('data_csv.csv')csv_file = pd.read_csv('data_csv.csv')
-                # print(csv_file)
-                # csv_df = pd.DataFrame(csv_file)
-                fig.add_trace(go.Scatter(x=csv_file['TIME'], y=csv_file['TEMP'], name="NEMO"))
-                print("Trace added...")
-                # print("Step 7...")
-                # fig_layout(fig)
-                print("Layout complete...")
-
-                return html.H3(f'Daily averaged TEMP line chart for {map_selection}',
-                               style={"color": "DarkSlateGrey"}), dcc.Graph(id='daily_temp_tab', figure=fig)
-
+        return daily_temperature(map_selection, fig)
 
     if active_tab == 'climatology_tab':
-        PATH = pathlib.Path(__file__).parent
-        nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/nc").resolve()
-        for file in os.listdir(nc_files):
-            fig = go.Figure()
-            nc_file = xr.open_dataset(nc_files.joinpath('GBRMYR_LTSP_gridded_daily_MC.nc'))
-            # print(nc_file['DEPTH'].head(30))
-            fig.add_trace(go.Contour(z = nc_file['CLIM'], x=nc_file['TIME'], transpose=True, line_width=0))
-            fig['layout']['yaxis']['autorange'] = "reversed"
-            fig.update_xaxes(title_text='Time')
-            fig.update_yaxes(title_text='Depth')
-            # fig_layout(fig)
-            return html.H3(f'Climatology Plot',
-                                   style={"color": "DarkSlateGrey"}), dcc.Graph(id='climatology_tab', figure=fig)
+        return climatology(map_selection, fig)
 
     if active_tab == 'gridded_temp_tab':
-        PATH = pathlib.Path(__file__).parent
-        nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/nc").resolve()
-        for file in os.listdir(nc_files):
-            fig = go.Figure()
-            nc_file = xr.open_dataset(nc_files.joinpath('GBRMYR_LTSP_gridded_daily_MC.nc'))
-            # print(nc_file['DEPTH'].head(30))
-            fig.add_trace(go.Contour(z = nc_file['TEMP'], x=nc_file['TIME'], transpose=True, line_width=0))
-            fig['layout']['yaxis']['autorange'] = "reversed"
-            fig.update_xaxes(title_text='Time')
-            fig.update_yaxes(title_text='Depth')
-            # fig_layout(fig)
-            return html.H3(f'Gridded Temperature Plot',
-                                   style={"color": "DarkSlateGrey"}), dcc.Graph(id='gridded_temp_tab', figure=fig)
-
-    if active_tab == 'daily_vel_tab':
-        PATH = pathlib.Path(__file__).parent
-        nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/nc").resolve()
-        for file in os.listdir(nc_files):
-
-            nc_file = xr.open_dataset(nc_files.joinpath('TAN100_LTSP_VV_daily.nc'))
-            #East plot
-            fig = go.Figure()
-            # print(nc_file['DEPTH'].head(30))
-            fig.add_trace(go.Contour(z = nc_file['UCUR'], x=nc_file['TIME'], transpose=True, line_width=0))
-            fig['layout']['yaxis']['autorange'] = "reversed"
-            fig.update_xaxes(title_text='Time')
-            fig.update_yaxes(title_text='Depth')
-            # fig_layout(fig)
-
-            # North plot
-            fig2 = go.Figure()
-            # print(nc_file['DEPTH'].head(30))
-            fig2.add_trace(go.Contour(z=nc_file['VCUR'], x=nc_file['TIME'], transpose=True, line_width=0))
-            fig2['layout']['yaxis']['autorange'] = "reversed"
-            fig2.update_xaxes(title_text='Time')
-            fig2.update_yaxes(title_text='Depth')
-            # fig_layout(fig)
-
-            #Cross Shelf plot
-            fig3 = go.Figure()
-            # print(nc_file['DEPTH'].head(30))
-            fig3.add_trace(go.Contour(z=nc_file['UU'], x=nc_file['TIME'], transpose=True, line_width=0))
-            fig3['layout']['yaxis']['autorange'] = "reversed"
-            fig3.update_xaxes(title_text='Time')
-            fig3.update_yaxes(title_text='Depth')
-            # fig_layout(fig)
-
-            #Alongshore plot
-            fig4 = go.Figure()
-            # print(nc_file['DEPTH'].head(30))
-            fig4.add_trace(go.Contour(z=nc_file['VV'], x=nc_file['TIME'], transpose=True, line_width=0))
-            fig4['layout']['yaxis']['autorange'] = "reversed"
-            fig4.update_xaxes(title_text='Time')
-            fig4.update_yaxes(title_text='Depth')
-            # fig_layout(fig)
-
-            return html.H3(f'Daily Velocity Plot (East)', style={"color": "DarkSlateGrey"}), \
-                   dcc.Graph(id='daily_vel_tab', figure=fig), \
-                   html.H3(f'Daily Velocity Plot (North)', style={"color": "DarkSlateGrey"}), \
-                   dcc.Graph(id='daily_vel_tab', figure=fig2), \
-                   html.H3(f'Daily Velocity Plot (Cross-Shelf)', style={"color": "DarkSlateGrey"}), \
-                   dcc.Graph(id='daily_vel_tab', figure=fig3), \
-                   html.H3(f'Daily Velocity Plot (Alongshore)', style={"color": "DarkSlateGrey"}), \
-                   dcc.Graph(id='daily_vel_tab', figure=fig4)
+        return gridded_temperature(map_selection, fig)
+    #
+    # if active_tab == 'local_vel_tab':
+    #     return daily_velocity(map_selection, fig, fig2)
+    #
+    # if active_tab == 'ne_vel_tab':
+    #     return ne_velocity(map_selection, fig, fig2)
 
 
+@app.callback(Output("content", "children"), [Input("vel_tabs", "active_tab")])
+def switch_tab(at):
+    fig = go.Figure()
+    fig_layout(fig)
+    fig2 = go.Figure()
+    fig_layout(fig2)
+
+    data_dir = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data").resolve()
+    map_selection = 'NRSYON'
+    tab1_content = html.H3('working')
+    if at == "tab-1":
+        return tab1_content
+    elif at == "tab-2":
+        return daily_velocity(map_selection, fig, fig2)
+    return html.P("This shouldn't ever be displayed...")
+
+
+def ne_velocity(map_selection, fig, fig2):
+    vcur_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/vcur").resolve()
+    ucur_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/ucur").resolve()
+    for file in os.listdir(vcur_files):
+        mooring_site = file[0:6]
+        fig.update_layout(
+            height=300,
+            width=1000,
+            )
+        fig2.update_layout(
+            height=300,
+            width=1000,
+        )
+        if mooring_site in MOORINGS and mooring_site == map_selection:
+            vcur_file = pd.read_csv(vcur_files.joinpath(map_selection + '_vcur.csv'))
+            fig.add_trace(go.Scatter(x=vcur_file['TIME'], y=vcur_file['VCUR'], name="NEMO"))
+            ucur_file = pd.read_csv(ucur_files.joinpath(map_selection + '_ucur.csv'))
+            fig2.add_trace(go.Scatter(x=ucur_file['TIME'], y=ucur_file['UCUR'], name="NEMO"))
+            return html.Div([
+                html.H3(f'VCUR at {map_selection}', style={"color": "DarkSlateGrey"}),
+                dcc.Graph(
+                figure=fig),
+                html.H3(f'UCUR at {map_selection}', style={"color": "DarkSlateGrey"}),
+                dcc.Graph(
+                figure=fig2)],
+                style={'backgroundColor': BODY_BACKGROUND_COLOUR}
+                )
+
+def temperature(map_selection, fig):
+    csv_files = PATH.joinpath(os.path.abspath(os.curdir) + "/csv/temp").resolve()
+    for file in os.listdir(csv_files):
+        mooring_site = file[0:6]
+        if mooring_site in MOORINGS and mooring_site == map_selection:
+            csv_file = pd.read_csv(csv_files.joinpath(map_selection + '_temp.csv'))
+            fig.add_trace(go.Scatter(x=csv_file['TIME'], y=csv_file['TEMP'], name="NEMO"))
+            return \
+                html.Div(
+                    [html.H3(f'Temperature at {map_selection}',
+                             style={"color": "DarkSlateGrey",
+                                    "display": "inline-block",
+                                    "width": "40%",
+                                    "margin-left": "20px",
+                                    "verticalAlign": "top"}),
+                     more_info_button()],
+                ), \
+                dcc.Graph(
+                    id='ucur_tab', figure=fig)
+            # style={'backgroundColor': BODY_BACKGROUND_COLOUR})
+
+def daily_temperature(map_selection, fig):
+    csv_files = PATH.joinpath(os.path.abspath(os.curdir) + "/csv/daily_temp").resolve()
+    for file in os.listdir(csv_files):
+        mooring_site = file[0:6]
+        if mooring_site in MOORINGS and mooring_site == map_selection:
+            csv_file = pd.read_csv(csv_files.joinpath(map_selection + '_temp_dayavg.csv'))
+            fig.add_trace(go.Scatter(x=csv_file['TIME'], y=csv_file['TEMP'], name="NEMO"))
+            return html.H3(f'Daily averaged temperature at {map_selection}',
+                           style={"color": "DarkSlateGrey"}), dcc.Graph(id='daily_temp_tab', figure=fig)
+
+def climatology(map_selection, fig):
+    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/nc").resolve()
+    if map_selection not in ['TAN100', 'GBRPPS', 'GBRMYR']:
+        map_selection = 'GBRMYR'
+    for file in os.listdir(nc_files):
+        nc_file = xr.open_dataset(nc_files.joinpath('GBRMYR_LTSP_gridded_daily_MC.nc'))
+        fig.add_trace(go.Contour(z=nc_file['CLIM'],
+                                 x=nc_file['TIME'],
+                                 transpose=True,
+                                 line_width=0,
+                                 zmax=35,
+                                 zmin=10,
+                                 ncontours=40,
+                                 ))
+        fig['layout']['yaxis']['autorange'] = "reversed"
+        fig.update_xaxes(title_text='Time')
+        fig.update_yaxes(title_text='Depth')
+        return html.Div([html.H3(f'Climatology at {map_selection}',
+                                 style={"color": "DarkSlateGrey"}), dcc.Graph(id='climatology_tab', figure=fig)])
+
+def gridded_temperature(map_selection, fig):
+    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/gridded/GBRMYR").resolve()
+    if map_selection not in ['TAN100', 'GBRPPS', 'GBRMYR']:
+        map_selection = 'GBRMYR'
+    for file in os.listdir(nc_files):
+        nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_LTSP_gridded_daily_MC.nc'))
+        fig.add_trace(go.Contour(z=nc_file['TEMP'],
+                                 x=nc_file['TIME'],
+                                 transpose=True,
+                                 line_width=0,
+                                 zmax=35,
+                                 zmin=10,
+                                 ncontours=40,
+                                 ))
+        fig['layout']['yaxis']['autorange'] = "reversed"
+        fig.update_xaxes(title_text='Time')
+        fig.update_yaxes(title_text='Depth')
+        return html.H3(f'Gridded temperature at {map_selection}',
+                       style={"color": "DarkSlateGrey"}), dcc.Graph(id='gridded_temp_tab', figure=fig)
+
+def daily_velocity(map_selection, fig, fig2):
+
+    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/gridded/TAN100").resolve()
+    for file in os.listdir(nc_files):
+        nc_file = xr.open_dataset(nc_files.joinpath('TAN100_LTSP_VV_daily.nc'))
+        fig.update_xaxes(title_text='Time')
+        fig.update_yaxes(title_text='Depth')
+        fig2.update_xaxes(title_text='Time')
+        fig2.update_yaxes(title_text='Depth')
+        rotated_degs = "{:.2f}".format(nc_file['VV'].attrs['reference_datum degrees'])
+        # fig = make_subplots(
+        #     # rows=4, cols=1,
+        #     rows=2, cols=1,
+        #     subplot_titles=(
+        #         # f'Daily East velocity at {map_selection}',
+        #         # f'Daily North velocity at {map_selection}',
+        #         f'Daily Cross-Shelf velocity at {map_selection} (Theta deg CW from N)',
+        #         f'Daily Alongshore velocity at {map_selection}  (Theta deg CW from E)'
+        #     ))
+        # fig_layout(fig)
+        # fig.add_trace(go.Contour(z = nc_file['UCUR'],
+        #                          x=nc_file['TIME'],
+        #                          transpose=True,
+        #                          line_width=0,
+        #                          # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
+        #                          zmax=1,
+        #                          zmin=-1,
+        #                          ncontours=40,
+        #                          ),
+        #               row=1, col=1
+        #               )
+        # fig['layout']['yaxis']['autorange'] = "reversed"
+        # fig.update_xaxes(title_text='Time')
+        # fig.update_yaxes(title_text='Depth')
+        # fig.add_trace(go.Contour(z=nc_file['VCUR'],
+        #                           x=nc_file['TIME'],
+        #                           transpose=True,
+        #                           line_width=0,
+        #                           # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
+        #                           zmax=1,
+        #                           zmin=-1,
+        #                           ncontours=40,
+        #                           ),
+        #               row=2, col=1
+        #                )
+
+        fig.add_trace(go.Contour(z=nc_file['UU'],
+                                 y=nc_file['DEPTH'],
+                                 x=nc_file['TIME'],
+                                 transpose=True,
+                                 line_width=0,
+                                 # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
+                                 zmax=1,
+                                 zmin=-1,
+                                 ncontours=40,
+                                 ),
+                      # row=1, col=1
+                      )
+
+        fig2.add_trace(go.Contour(z=nc_file['VV'],
+                                 y=nc_file['DEPTH'],
+                                 x=nc_file['TIME'],
+                                 transpose=True,
+                                 line_width=0,
+                                 # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
+                                 zmax=1,
+                                 zmin=-1,
+                                 ncontours=40,
+                                 ),
+                      # row=2, col=1
+                      )
+        fig.update_layout(height=300,
+                          width=1000,
+                          title=f"Daily Cross-Shore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from N)"
+                          )
+        fig2.update_layout(height=300,
+                          width=1000,
+                           title=f"Daily Alongshore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from E)"
+                          )
+        return \
+            html.Div(
+                [html.H3(f'Gridded Daily Velocities at {map_selection}',
+                         style={"color": "DarkSlateGrey",
+                                "display": "inline-block",
+                                "width": "40%",
+                                "margin-left": "20px",
+                                "verticalAlign": "top"}),
+                 more_info_button()],
+            ), \
+            dcc.Graph(id='local_vel_tab', figure=fig,
+                      # title=f"Daily Cross-Shelf velocity at {map_selection} (Theta deg CW from E)"
+                      ), \
+            dcc.Graph(id='local_vel_tab', figure=fig2,
+                      # title=f"Daily Alongshore velocity at {map_selection} (Theta deg CW from E)"
+                      ),
+            # html.H3(f'Daily Velocity Plot (North)', style={"color": "DarkSlateGrey"}), \
+        # dcc.Graph(id='vel_tab', figure=fig2), \
+        # html.H3(f'Daily Velocity Plot (Cross-Shelf)', style={"color": "DarkSlateGrey"}), \
+        # dcc.Graph(id='vel_tab', figure=fig3), \
+        # html.H3(f'Daily Velocity Plot (Alongshore)', style={"color": "DarkSlateGrey"}), \
+        # dcc.Graph(id='vel_tab', figure=fig4)
 
 # print("Always executed")
-
-# if __name__ == "main":
-#     print("If clause reached")
-# else:
-#     print("Else clause reached")
 
 # if __name__ == '__main__':
 #     app.run_server(debug=False)

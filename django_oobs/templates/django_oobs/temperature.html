@@ -1,11 +1,15 @@
 {% extends "django_oobs/base.html" %}
-{% block content %}
-    <h1>About Page</h1>
-        <article class="media content-section">
-          <div class="media-body">
+{% block sidebar %}
+    {% load plotly_dash %}
 
-            <h2><a class="article-title" href="#">A work in progress.</a></h2>
-
+    <main role="main" class="container">
+<!--        <h1>Blog About!!!</h1>-->
+      <div class="row">
+        <div class="col-md-12">
+            <div class="{% plotly_class name='temperature_app' %} card" style="height: 100%, width: 100%">
+                {% plotly_app name='temperature_app' ratio=1 %}
+            </div>
+            </div>
           </div>
-        </article>
-{% endblock content %}
+    </main>
+{% endblock sidebar %}

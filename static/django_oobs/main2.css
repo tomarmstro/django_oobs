@@ -1,0 +1,208 @@
+:root {
+  --background_colour: #d9d7bd;
+  --header_colour: #3b6e8f;
+  --header_text_colour: #3c3c3c;
+  --footer_colour: #3b6e8f;
+  --footer_text_colour: #3c3c3c;
+  --border_colour: #3c3c3c;
+}
+
+body {
+  background: var(--background_colour); /* html body colour */
+  color: #333333;
+  margin-top: 5rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #444444;
+}
+
+ul {
+  margin: 0;
+}
+
+.bg-steel {
+  background-color: var(--header_colour); /* Header background colour */
+}
+
+.site-header .navbar-nav .nav-link {
+  color: #cbd5db; /* Header link text colour */
+  background: var(--header_colour); /* Header link background colour */
+
+}
+
+.site-header .navbar-nav .nav-logo {
+  display: inline-block;
+  padding: 5px 10px;
+}
+
+.site-header .navbar-nav .nav-link:hover {
+  color: #3c3c3c; /* Header link mouseover colour */
+}
+
+.site-header .navbar-nav .nav-link.active {
+  font-weight: 500;
+}
+
+
+
+.content-section {
+  background: #ffffff;
+  padding: 10px 100px;
+  border: 100px solid var(--border_colour);
+  border-radius: 3px;
+  margin-bottom: 20px;
+}
+
+.article-title {
+  color: #444444;
+}
+
+a.article-title:hover {
+  color: #428bca;
+  text-decoration: none;
+}
+
+.article-content {
+  white-space: pre-line;
+}
+
+.article-img {
+  height: 65px;
+  width: 65px;
+  margin-right: 16px;
+}
+
+.article-metadata {
+  padding-bottom: 1px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border_colour)
+}
+
+.article-metadata a:hover {
+  color: #333;
+  text-decoration: none;
+}
+
+.article-svg {
+  width: 25px;
+  height: 25px;
+  vertical-align: middle;
+}
+
+.account-img {
+  height: 125px;
+  width: 125px;
+  margin-right: 20px;
+  margin-bottom: 16px;
+}
+
+.account-heading {
+  font-size: 2.5rem;
+}
+
+.footer {
+  background: var(--footer_colour); /* Footer background colour */
+  color: var(--footer_text_colour);
+
+  position: relative;
+  
+
+}
+
+.app-box {
+	height: 100px
+	width: 500px;
+	background-color: #DBF9FC;
+	
+}
+.footer .text {
+  width: 400px;
+  height: 200px;
+	
+  margin-left: 20px;
+
+  word-wrap: normal;  
+}
+
+.footer .footer-bottom {
+  background: var(--footer_colour); /* Footer text thing background */
+  color: var(--footer_text_colour); /* Footer text text colour */
+  height: 30px;
+  text-align: center;
+  position: absolute;
+  bottom: 0px;
+
+}
+.dash-style {
+background-color: var(--background_colour);
+
+}
+
+.custom-header-left {
+
+  padding-right: 120px;
+  padding-left: 120px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.custom-header-right {
+  padding-left: 20px;
+  padding-right: 75px;
+}
+
+.custom-header-icons-right {
+  padding-right: 25px;
+
+
+
+
+}
+
+
+
+.fa {
+  padding: 20px;
+  font-size: 30px;
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  text-decoration: none;
+  margin: 5px 2px;
+  border-radius: 50%;
+}
+
+/* Add a hover effect if you want */
+.fa:hover {
+  opacity: 0.7;
+}
+
+/* Set a specific color for each brand */
+
+.fa-facebook {
+  background: #3B5998;
+  color: white;
+}
+
+/* Twitter */
+.fa-twitter {
+  background: #55ACEE;
+  color: white;
+}
+
+.fa:hover {
+    opacity: 0.7;
+}
+
+.column {
+  float: left;
+  width: 33.33%;
+}
+
+.alignleft {
+	float: left;
+}
+.alignright {
+	float: right;
+}
