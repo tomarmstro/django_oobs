@@ -29,7 +29,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['oceanobserver.herokuapp.com',
                  '127.0.0.1',
-                 '194.195.123.88']
+                 '194.195.123.88',
+                 '10.10.20.128']
 
 
 # Application definition
