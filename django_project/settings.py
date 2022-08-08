@@ -159,7 +159,8 @@ PLOTLY_COMPONENTS = [
 
 STATIC_URL = '/static/'
 # STATICFILES_LOCATION = 'static'
-STATIC_ROOT = '/static/'
+# STATIC_ROOT = '/static/'
+STATIC_ROOT =  os.path.join(os.path.dirname(BASE_DIR), "static")
 # STATICFILES_DIRS = ['django_oobs/static/django_oobs/', 'django_oobs/static/', os.path.join(BASE_DIR, 'static')]
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 # Default primary key field type
