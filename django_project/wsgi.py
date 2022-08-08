@@ -14,3 +14,7 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_project.settings')
 
 application = get_wsgi_application()
+
+from dash_apps/finished_apps import dash_app as application
+if __name__ == "__main__":
+    application.run()
