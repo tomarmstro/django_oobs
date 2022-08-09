@@ -48,8 +48,9 @@ app = DjangoDash('data', external_stylesheets=external_stylesheets)
 
 MOORINGS = ['GBRMYR', 'GBRPPS', 'GBRLSL', 'GBRHIS', 'GBROTE', 'GBRCCH', 'NWSBAR', 'NWSLYN', 'NWSROW', 'NWSBRW',
             'NRSYON']
-map_selection = "NRSYON"
+map_selection = "GBRMYR"
 active_tab = 'vcur_tab'
+map_colours = ['#808080', '#ff0000']
 
 # Create map
 def render_map():
@@ -62,6 +63,8 @@ def render_map():
         lat=map_data['Latitude'],
         lon=map_data['Longitude'],
         color='Group',
+        # color='Site',
+        color_discrete_sequence=map_colours,
         hover_name='Site',
         zoom=3.3,
         center={"lat": -27, "lon": 134},
@@ -103,8 +106,8 @@ def build_tabs():
             # dbc.Tab(render_map(),
             #         label='map_select', tab_id='map_tab', ),
             dbc.Tab(label='Velocity', tab_id='vel_tab', tabClassName="flex-grow-1 text-center"),
-            dbc.Tab(label='NE Velocity', tab_id='vcur_tab', tabClassName="flex-grow-1 text-center"),
             dbc.Tab(label='Temperature', tab_id='temp_tab', tabClassName="flex-grow-1 text-center"),
+            dbc.Tab(label='NE Velocity', tab_id='vcur_tab', tabClassName="flex-grow-1 text-center"),
             dbc.Tab(label='Daily Temperature', tab_id='daily_temp_tab', tabClassName="flex-grow-1 text-center"),
             dbc.Tab(label='Climatology', tab_id='climatology_tab', tabClassName="flex-grow-1 text-center"),
             dbc.Tab(label='Gridded Temperature', tab_id='gridded_temp_tab', tabClassName="flex-grow-1 text-center"),
@@ -120,10 +123,11 @@ def fig_layout(fig):
     fig.update_layout(
         plot_bgcolor=BODY_BACKGROUND_COLOUR,
         paper_bgcolor=BODY_BACKGROUND_COLOUR,
-        font_color=BODY_BORDER_COLOUR
+        font_color=BODY_BORDER_COLOUR,
         # plot_bgcolor = IMOS_MID_GREY_COLOUR,
         # paper_bgcolor = IMOS_MID_GREY_COLOUR,
-        # font_color = IMOS_SAND_COLOUR
+        # font_color = IMOS_SAND_COLOUR,
+        margin=dict(t=50)
     )
 
 def colourscale_rangeslider():
@@ -173,15 +177,43 @@ vel_tabs = html.Div(
     [
         dbc.Tabs(
             [
-                dbc.Tab(label="Tab 1", tab_id="tab-1"),
-                dbc.Tab(label="Tab 2", tab_id="tab-2"),
+                dbc.Tab(label="Cross and Alongshore", tab_id="cross_alongshore_tab"),
+                dbc.Tab(label="North/East", tab_id="ne_tab"),
             ],
             id="vel_tabs",
-            active_tab="tab-1",
+            active_tab="cross_alongshore_tab",
         ),
         html.Div(id="content"),
     ]
 )
+
+
+def build_temp_tabs():
+    return dbc.Tabs(
+        [
+            dbc.Tab(label='Climatology', tab_id='climatology_tab', tabClassName="flex-grow-1 text-center"),
+            dbc.Tab(label='Gridded Temperature', tab_id='gridded_temp_tab', tabClassName="flex-grow-1 text-center"),
+        ],
+        id='temperature_tabs',
+        active_tab='climatology_tab',
+        style={'width': "100%", 'height': "100%"},
+        className="custom-tabs"
+    )
+
+temp_tabs = html.Div(
+    [
+        dbc.Tabs(
+            [
+                dbc.Tab(label="Climatology", tab_id="climatology_tab"),
+                dbc.Tab(label="Gridded Temperature", tab_id="gridded_temp_tab"),
+            ],
+            id="temp_tabs",
+            active_tab="climatology_tab",
+        ),
+        html.Div(id="content"),
+    ]
+)
+
 
 ##################### MODAL #######################
 map_modal = html.Div(
@@ -258,7 +290,7 @@ def render_tab_content(active_tab, clickData):
     fig_layout(fig2)
 
     data_dir = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data").resolve()
-    map_selection = 'NRSYON'
+    map_selection = 'GBRMYR'
     if clickData is not None:
         map_selection = clickData['points'][0]['hovertext']
         print(f"{map_selection} selected from the map.")
@@ -276,14 +308,13 @@ def render_tab_content(active_tab, clickData):
     #             html.H3('StILL')])
 
     if active_tab == 'vel_tab':
-        # return html.Div(daily_velocity(map_selection, fig, fig2), vel_tabs)
         return vel_tabs, html.Div(id='content')
-
-    if active_tab == 'vcur_tab':
-        return ne_velocity(map_selection, fig, fig2)
 
     if active_tab == 'temp_tab':
         return temperature(map_selection, fig)
+
+    if active_tab == 'vcur_tab':
+        return ne_velocity(map_selection, fig, fig2)
 
     if active_tab == 'daily_temp_tab':
         return daily_temperature(map_selection, fig)
@@ -301,21 +332,30 @@ def render_tab_content(active_tab, clickData):
     #     return ne_velocity(map_selection, fig, fig2)
 
 
-@app.callback(Output("content", "children"), [Input("vel_tabs", "active_tab")])
-def switch_tab(at):
+@app.callback(Output(component_id="content", component_property="children"),
+              [Input(component_id="vel_tabs", component_property="active_tab"),
+               Input(component_id="moorings_map", component_property="clickData")])
+def switch_tab(vel_tabs, clickData):
     fig = go.Figure()
     fig_layout(fig)
     fig2 = go.Figure()
     fig_layout(fig2)
+    map_selection = 'GBRMYR'
+    if clickData is not None:
+        map_selection = clickData['points'][0]['hovertext']
+        print(f"{map_selection} selected from the map.")
+    print(active_tab)
 
     data_dir = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data").resolve()
-    map_selection = 'NRSYON'
+    # map_selection = 'NRSYON'
     tab1_content = html.H3('working')
-    if at == "tab-1":
-        return tab1_content
-    elif at == "tab-2":
+    if vel_tabs == "cross_alongshore_tab":
         return daily_velocity(map_selection, fig, fig2)
+    elif vel_tabs == "ne_tab":
+        return n_e_velocity(map_selection, fig, fig2)
     return html.P("This shouldn't ever be displayed...")
+
+
 
 
 def ne_velocity(map_selection, fig, fig2):
@@ -427,41 +467,6 @@ def daily_velocity(map_selection, fig, fig2):
         fig2.update_xaxes(title_text='Time')
         fig2.update_yaxes(title_text='Depth')
         rotated_degs = "{:.2f}".format(nc_file['VV'].attrs['reference_datum degrees'])
-        # fig = make_subplots(
-        #     # rows=4, cols=1,
-        #     rows=2, cols=1,
-        #     subplot_titles=(
-        #         # f'Daily East velocity at {map_selection}',
-        #         # f'Daily North velocity at {map_selection}',
-        #         f'Daily Cross-Shelf velocity at {map_selection} (Theta deg CW from N)',
-        #         f'Daily Alongshore velocity at {map_selection}  (Theta deg CW from E)'
-        #     ))
-        # fig_layout(fig)
-        # fig.add_trace(go.Contour(z = nc_file['UCUR'],
-        #                          x=nc_file['TIME'],
-        #                          transpose=True,
-        #                          line_width=0,
-        #                          # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
-        #                          zmax=1,
-        #                          zmin=-1,
-        #                          ncontours=40,
-        #                          ),
-        #               row=1, col=1
-        #               )
-        # fig['layout']['yaxis']['autorange'] = "reversed"
-        # fig.update_xaxes(title_text='Time')
-        # fig.update_yaxes(title_text='Depth')
-        # fig.add_trace(go.Contour(z=nc_file['VCUR'],
-        #                           x=nc_file['TIME'],
-        #                           transpose=True,
-        #                           line_width=0,
-        #                           # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
-        #                           zmax=1,
-        #                           zmin=-1,
-        #                           ncontours=40,
-        #                           ),
-        #               row=2, col=1
-        #                )
 
         fig.add_trace(go.Contour(z=nc_file['UU'],
                                  y=nc_file['DEPTH'],
@@ -490,13 +495,18 @@ def daily_velocity(map_selection, fig, fig2):
                       )
         fig.update_layout(height=300,
                           width=1000,
-                          title=f"Daily Cross-Shore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from N)"
+                          # title=f"Daily Cross-Shore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from N)"
+                          title = f"Daily Cross-Shore velocity at (hardcoded TAN100) ({rotated_degs}{DEGREES_SYMBOL} CW from N)",
+                          margin=dict(t=50)
                           )
         fig2.update_layout(height=300,
                           width=1000,
-                           title=f"Daily Alongshore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from E)"
+                          # title=f"Daily Alongshore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from E)"
+                          title = f"Daily Alongshore velocity at (hardcoded TAN100) ({rotated_degs}{DEGREES_SYMBOL} CW from E)",
+                          margin=dict(t=50)
                           )
         return \
+            html.Br(),\
             html.Div(
                 [html.H3(f'Gridded Daily Velocities at {map_selection}',
                          style={"color": "DarkSlateGrey",
@@ -512,12 +522,73 @@ def daily_velocity(map_selection, fig, fig2):
             dcc.Graph(id='local_vel_tab', figure=fig2,
                       # title=f"Daily Alongshore velocity at {map_selection} (Theta deg CW from E)"
                       ),
-            # html.H3(f'Daily Velocity Plot (North)', style={"color": "DarkSlateGrey"}), \
-        # dcc.Graph(id='vel_tab', figure=fig2), \
-        # html.H3(f'Daily Velocity Plot (Cross-Shelf)', style={"color": "DarkSlateGrey"}), \
-        # dcc.Graph(id='vel_tab', figure=fig3), \
-        # html.H3(f'Daily Velocity Plot (Alongshore)', style={"color": "DarkSlateGrey"}), \
-        # dcc.Graph(id='vel_tab', figure=fig4)
+
+
+def n_e_velocity(map_selection, fig, fig2):
+    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/gridded/TAN100").resolve()
+    for file in os.listdir(nc_files):
+        nc_file = xr.open_dataset(nc_files.joinpath('TAN100_LTSP_VV_daily.nc'))
+        fig.update_xaxes(title_text='Time')
+        fig.update_yaxes(title_text='Depth')
+        fig2.update_xaxes(title_text='Time')
+        fig2.update_yaxes(title_text='Depth')
+        rotated_degs = "{:.2f}".format(nc_file['VV'].attrs['reference_datum degrees'])
+
+        fig.add_trace(go.Contour(z=nc_file['VCUR'],
+                                 y=nc_file['DEPTH'],
+                                 x=nc_file['TIME'],
+                                 transpose=True,
+                                 line_width=0,
+                                 # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
+                                 zmax=1,
+                                 zmin=-1,
+                                 ncontours=40,
+                                 ),
+                      # row=1, col=1
+                      )
+
+        fig2.add_trace(go.Contour(z=nc_file['UCUR'],
+                                  y=nc_file['DEPTH'],
+                                  x=nc_file['TIME'],
+                                  transpose=True,
+                                  line_width=0,
+                                  # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
+                                  zmax=1,
+                                  zmin=-1,
+                                  ncontours=40,
+                                  ),
+                       # row=2, col=1
+                       )
+        fig.update_layout(height=300,
+                          width=1000,
+                          # title=f"Daily Cross-Shore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from N)"
+                          title=f"Daily North-South velocity at (hardcoded TAN100)",
+                          margin=dict(t=50)
+                          )
+        fig2.update_layout(height=300,
+                           width=1000,
+                           # title=f"Daily Alongshore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from E)"
+                           title=f"Daily East-West velocity at (hardcoded TAN100)",
+                           margin=dict(t=50)
+                           )
+        return \
+            html.Br(), \
+            html.Div(
+                [html.H3(f'Gridded Daily Velocities at {map_selection}',
+                         style={"color": "DarkSlateGrey",
+                                "display": "inline-block",
+                                "width": "40%",
+                                "margin-left": "20px",
+                                "verticalAlign": "top"}),
+                 more_info_button()],
+            ), \
+            dcc.Graph(id='local_vel_tab', figure=fig,
+                      # title=f"Daily Cross-Shelf velocity at {map_selection} (Theta deg CW from E)"
+                      ), \
+            dcc.Graph(id='local_vel_tab', figure=fig2,
+                      # title=f"Daily Alongshore velocity at {map_selection} (Theta deg CW from E)"
+                      ),
+
 
 # print("Always executed")
 
