@@ -105,12 +105,48 @@ def build_tabs():
         [
             # dbc.Tab(render_map(),
             #         label='map_select', tab_id='map_tab', ),
-            dbc.Tab(label='Velocity', tab_id='vel_tab', tabClassName="flex-grow-1 text-center"),
-            dbc.Tab(label='Temperature', tab_id='temp_tab', tabClassName="flex-grow-1 text-center"),
-            dbc.Tab(label='NE Velocity', tab_id='vcur_tab', tabClassName="flex-grow-1 text-center"),
-            dbc.Tab(label='Daily Temperature', tab_id='daily_temp_tab', tabClassName="flex-grow-1 text-center"),
-            dbc.Tab(label='Climatology', tab_id='climatology_tab', tabClassName="flex-grow-1 text-center"),
-            dbc.Tab(label='Gridded Temperature', tab_id='gridded_temp_tab', tabClassName="flex-grow-1 text-center"),
+            dbc.Tab(label='Velocity',
+                    tab_id='vel_tab',
+                    tabClassName="flex-grow-1 text-center",
+                    active_label_style={
+                        "backgroundColor": IMOS_DEEP_BLUE_COLOUR,
+                        "color": "white"
+                    },
+                        label_style={
+                            'border-color': IMOS_DEEP_BLUE_COLOUR,
+                        }),
+            dbc.Tab(label='Temperature',
+                    tab_id='temp_tab',
+                    tabClassName="flex-grow-1 text-center",
+                    active_label_style={
+                        "backgroundColor": IMOS_DEEP_BLUE_COLOUR,
+                        "color": "white"
+                    },
+                        label_style={
+                            'border-color': IMOS_DEEP_BLUE_COLOUR,
+                        }),
+            dbc.Tab(label='NE Velocity',
+                    tab_id='vcur_tab',
+                    tabClassName="flex-grow-1 text-center",
+                    active_label_style={
+                        "backgroundColor": IMOS_DEEP_BLUE_COLOUR,
+                        "color": "white"
+                    },
+                        label_style={
+                            'border-color': IMOS_DEEP_BLUE_COLOUR,
+                        }),
+            dbc.Tab(label='Daily Temperature',
+                    tab_id='daily_temp_tab',
+                    tabClassName="flex-grow-1 text-center",
+                    active_label_style={
+                        "backgroundColor": IMOS_DEEP_BLUE_COLOUR,
+                        "color": "white"
+                    },
+                        label_style={
+                            'border-color': IMOS_DEEP_BLUE_COLOUR,
+                        }),
+            # dbc.Tab(label='Climatology', tab_id='climatology_tab', tabClassName="flex-grow-1 text-center"),
+            # dbc.Tab(label='Gridded Temperature', tab_id='gridded_temp_tab', tabClassName="flex-grow-1 text-center"),
 
         ],
         id='tabs',
@@ -161,73 +197,97 @@ def more_info_button():
                        "position": "absolute"})
 
 
-def build_velocity_tabs():
-    return dbc.Tabs(
-        [
-            dbc.Tab(label='Local Velocity', tab_id='local_vel_tab', tabClassName="flex-grow-1 text-center"),
-            dbc.Tab(label='NE Velocity', tab_id='ne_vel_tab', tabClassName="flex-grow-1 text-center"),
-        ],
-        id='velocity_tabs',
-        active_tab='ne_vel_tab',
-        style={'width': "100%", 'height': "100%"},
-        className="custom-tabs"
-    )
-
 vel_tabs = html.Div(
     [
         dbc.Tabs(
             [
-                dbc.Tab(label="Cross and Alongshore", tab_id="cross_alongshore_tab"),
-                dbc.Tab(label="North/East", tab_id="ne_tab"),
+                dbc.Tab(label="Cross and Alongshore",
+                        tab_id="cross_alongshore_tab",
+                        # tabClassName="flex-grow-1 text-center",
+                        active_label_style={
+                            "backgroundColor": IMOS_DEEP_BLUE_COLOUR,
+                            "color": "white"
+                        },
+                        label_style={
+                            'border-color': IMOS_DEEP_BLUE_COLOUR,
+                        }),
+                dbc.Tab(label="North/East",
+                        tab_id="ne_tab",
+                        # tabClassName="flex-grow-1 text-center",
+                        active_label_style={
+                            "backgroundColor": IMOS_DEEP_BLUE_COLOUR,
+                            "color": "white"
+                        },
+                        label_style={
+                            'border-color': IMOS_DEEP_BLUE_COLOUR,
+                        }
+                        ),
             ],
             id="vel_tabs",
             active_tab="cross_alongshore_tab",
+
         ),
-        html.Div(id="content"),
+        html.Div(id="vel_tab_content"),
     ]
 )
 
-
-def build_temp_tabs():
-    return dbc.Tabs(
-        [
-            dbc.Tab(label='Climatology', tab_id='climatology_tab', tabClassName="flex-grow-1 text-center"),
-            dbc.Tab(label='Gridded Temperature', tab_id='gridded_temp_tab', tabClassName="flex-grow-1 text-center"),
-        ],
-        id='temperature_tabs',
-        active_tab='climatology_tab',
-        style={'width': "100%", 'height': "100%"},
-        className="custom-tabs"
-    )
 
 temp_tabs = html.Div(
     [
         dbc.Tabs(
             [
-                dbc.Tab(label="Climatology", tab_id="climatology_tab"),
-                dbc.Tab(label="Gridded Temperature", tab_id="gridded_temp_tab"),
+                dbc.Tab(label="Climatology",
+                        tab_id="climatology_tab",
+                        # tabClassName="flex-grow-1 text-center",
+                        active_label_style={
+                            "backgroundColor": IMOS_DEEP_BLUE_COLOUR,
+                            "color": "white"
+                        },
+                        label_style={
+                            'border-color': IMOS_DEEP_BLUE_COLOUR,
+                        }),
+                dbc.Tab(label="Gridded Temperature",
+                        tab_id="gridded_temp_tab",
+                        # tabClassName="flex-grow-1 text-center",
+                        active_label_style={
+                            "backgroundColor": IMOS_DEEP_BLUE_COLOUR,
+                            "color": "white"
+                        },
+                        label_style={
+                            'border-color': IMOS_DEEP_BLUE_COLOUR,
+                        }),
+                dbc.Tab(label="Anomaly",
+                        tab_id="anomaly_tab",
+                        # tabClassName="flex-grow-1 text-center",
+                        active_label_style={
+                            "backgroundColor": IMOS_DEEP_BLUE_COLOUR,
+                            "color": "white"
+                        },
+                        label_style={
+                            'border-color': IMOS_DEEP_BLUE_COLOUR,
+                        }),
             ],
             id="temp_tabs",
             active_tab="climatology_tab",
         ),
-        html.Div(id="content"),
+        html.Div(id="temp_tab_content"),
     ]
 )
 
-
-##################### MODAL #######################
 map_modal = html.Div(
     [
         dbc.Row(dbc.Button("Select Mooring", id="open-map-modal", color='primary', size="lg"), justify="center", align="center"),
         dbc.Modal(
             [
-                dbc.ModalHeader("Please select a mooring location"),
+                dbc.ModalHeader("Please select a mooring location",
+                              style = {"backgroundColor": IMOS_MID_GREY_COLOUR}),
                 # dbc.ModalBody(f"Selected mooring: {map_selection}"),
-                dbc.ModalBody(render_map()),
+                dbc.ModalBody(render_map(),
+                              style = {"backgroundColor": IMOS_MID_GREY_COLOUR}),
                 dbc.ModalFooter(dbc.Button("Close", id="close-dismiss")),
             ],
             id="map_modal",
-            style={"max-width": "none", "width": "90%", }, )
+            style={"max-width": "none", "width": "90%"})
             # is_open=False,
         # ),
     ]
@@ -265,7 +325,7 @@ app.layout = html.Div(
         # vel_tabs,
 
 
-    ], style={'display': 'inline-block',
+    ], style={
                         'width': '100%',
                         # 'height': '800px',
                         'backgroundColor': BODY_BACKGROUND_COLOUR,
@@ -278,11 +338,9 @@ app.layout = html.Div(
 # ---------------------------------------------------------------
 # Get tab content
 @app.callback(
-    # Output(component_id="click-data", component_property="children"),
     Output(component_id='tab_content', component_property='children'),
     Input(component_id='tabs', component_property='active_tab'),
     Input(component_id="moorings_map", component_property="clickData"))
-# Input(component_id='selected_time', component_property='active_time')])
 def render_tab_content(active_tab, clickData):
     fig = go.Figure()
     fig_layout(fig)
@@ -296,22 +354,12 @@ def render_tab_content(active_tab, clickData):
         print(f"{map_selection} selected from the map.")
     print(active_tab)
 
-    # if active_tab == 'vel_tab':
-    #     return html.Div(id="vel_container",
-    #         children=[
-    #             build_velocity_tabs(),
-    #             html.H3('HERE'),
-    #             html.H6('AND HERE'),
-    #             html.Div(id='vel_tab_content',
-    #              className="p-6"
-    #              ),
-    #             html.H3('StILL')])
-
     if active_tab == 'vel_tab':
-        return vel_tabs, html.Div(id='content')
+        return vel_tabs, html.Div(id='vel_tab_content')
 
     if active_tab == 'temp_tab':
-        return temperature(map_selection, fig)
+        return temp_tabs, html.Div(id='temp_tab_content')
+        # return temperature(map_selection, fig)
 
     if active_tab == 'vcur_tab':
         return ne_velocity(map_selection, fig, fig2)
@@ -319,11 +367,11 @@ def render_tab_content(active_tab, clickData):
     if active_tab == 'daily_temp_tab':
         return daily_temperature(map_selection, fig)
 
-    if active_tab == 'climatology_tab':
-        return climatology(map_selection, fig)
-
-    if active_tab == 'gridded_temp_tab':
-        return gridded_temperature(map_selection, fig)
+    # if active_tab == 'climatology_tab':
+    #     return climatology(map_selection, fig)
+    #
+    # if active_tab == 'gridded_temp_tab':
+    #     return gridded_temperature(map_selection, fig)
     #
     # if active_tab == 'local_vel_tab':
     #     return daily_velocity(map_selection, fig, fig2)
@@ -332,10 +380,10 @@ def render_tab_content(active_tab, clickData):
     #     return ne_velocity(map_selection, fig, fig2)
 
 
-@app.callback(Output(component_id="content", component_property="children"),
+@app.callback(Output(component_id="vel_tab_content", component_property="children"),
               [Input(component_id="vel_tabs", component_property="active_tab"),
                Input(component_id="moorings_map", component_property="clickData")])
-def switch_tab(vel_tabs, clickData):
+def sub_velocity_tabs(vel_tabs, clickData):
     fig = go.Figure()
     fig_layout(fig)
     fig2 = go.Figure()
@@ -353,8 +401,36 @@ def switch_tab(vel_tabs, clickData):
         return daily_velocity(map_selection, fig, fig2)
     elif vel_tabs == "ne_tab":
         return n_e_velocity(map_selection, fig, fig2)
+
     return html.P("This shouldn't ever be displayed...")
 
+
+@app.callback(Output(component_id="temp_tab_content", component_property="children"),
+              [Input(component_id="temp_tabs", component_property="active_tab"),
+               Input(component_id="moorings_map", component_property="clickData")])
+def sub_temperature_tabs(temp_tabs, clickData):
+    fig = go.Figure()
+    fig_layout(fig)
+    fig2 = go.Figure()
+    fig_layout(fig2)
+    map_selection = 'GBRMYR'
+    if clickData is not None:
+        map_selection = clickData['points'][0]['hovertext']
+        print(f"{map_selection} selected from the map.")
+    print(active_tab)
+
+    data_dir = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data").resolve()
+    # map_selection = 'NRSYON'
+    tab1_content = html.H3('working')
+    if temp_tabs == "climatology_tab":
+        return climatology(map_selection, fig)
+    elif temp_tabs == "gridded_temp_tab":
+        return gridded_temperature(map_selection, fig)
+    elif temp_tabs == "anomaly_tab":
+        return anomaly(map_selection, fig)
+
+
+    return html.P("This shouldn't ever be displayed...")
 
 
 
@@ -423,8 +499,8 @@ def climatology(map_selection, fig):
         map_selection = 'GBRMYR'
     for file in os.listdir(nc_files):
         nc_file = xr.open_dataset(nc_files.joinpath('GBRMYR_LTSP_gridded_daily_MC.nc'))
-        fig.add_trace(go.Contour(z=nc_file['CLIM'],
-                                 x=nc_file['TIME'],
+        fig.add_trace(go.Contour(z=nc_file['CLIM'][450:1200],
+                                 x=nc_file['CLIM']['TIME'][450:1200],
                                  transpose=True,
                                  line_width=0,
                                  zmax=35,
@@ -432,9 +508,11 @@ def climatology(map_selection, fig):
                                  ncontours=40,
                                  ))
         fig['layout']['yaxis']['autorange'] = "reversed"
-        fig.update_xaxes(title_text='Time')
+        fig.update_xaxes(title_text='Time',
+                         tickformat="%B") #set x axis labels to month only
         fig.update_yaxes(title_text='Depth')
-        return html.Div([html.H3(f'Climatology at {map_selection}',
+        return html.Br(),\
+               html.Div([html.H3(f'Climatology at {map_selection} *hardcoded GBRMYR*',
                                  style={"color": "DarkSlateGrey"}), dcc.Graph(id='climatology_tab', figure=fig)])
 
 def gridded_temperature(map_selection, fig):
@@ -454,8 +532,32 @@ def gridded_temperature(map_selection, fig):
         fig['layout']['yaxis']['autorange'] = "reversed"
         fig.update_xaxes(title_text='Time')
         fig.update_yaxes(title_text='Depth')
-        return html.H3(f'Gridded temperature at {map_selection}',
+        return html.Br(),\
+               html.H3(f'Gridded temperature at {map_selection} *hardcoded GBRMYR*',
                        style={"color": "DarkSlateGrey"}), dcc.Graph(id='gridded_temp_tab', figure=fig)
+
+def anomaly(map_selection, fig):
+    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/nc").resolve()
+    if map_selection not in ['TAN100', 'GBRPPS', 'GBRMYR']:
+        map_selection = 'GBRMYR'
+    for file in os.listdir(nc_files):
+        nc_file = xr.open_dataset(nc_files.joinpath('GBRMYR_LTSP_gridded_daily_MC.nc'))
+        anomaly = nc_file['CLIM']-nc_file['TEMP']
+        fig.add_trace(go.Contour(z=anomaly,
+                                 transpose=True,
+                                 line_width=0,
+                                 zmax=5,
+                                 zmin=-5,
+                                 ncontours=20,
+                                 ))
+        fig['layout']['yaxis']['autorange'] = "reversed"
+        fig.update_xaxes(title_text='Time')
+        fig.update_yaxes(title_text='Depth')
+        return html.Br(),\
+               html.Div([html.H3(f'Temperature anomalies at {map_selection} *hardcoded GBRMYR*',
+                                 style={"color": "DarkSlateGrey"}), dcc.Graph(id='anomaly_tab', figure=fig)])
+
+
 
 def daily_velocity(map_selection, fig, fig2):
 
@@ -496,19 +598,19 @@ def daily_velocity(map_selection, fig, fig2):
         fig.update_layout(height=300,
                           width=1000,
                           # title=f"Daily Cross-Shore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from N)"
-                          title = f"Daily Cross-Shore velocity at (hardcoded TAN100) ({rotated_degs}{DEGREES_SYMBOL} CW from N)",
+                          title = f"Daily Cross-Shore velocity at ({rotated_degs}{DEGREES_SYMBOL} CW from N) *hardcoded TAN100*",
                           margin=dict(t=50)
                           )
         fig2.update_layout(height=300,
                           width=1000,
                           # title=f"Daily Alongshore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from E)"
-                          title = f"Daily Alongshore velocity at (hardcoded TAN100) ({rotated_degs}{DEGREES_SYMBOL} CW from E)",
+                          title = f"Daily Alongshore velocity at ({rotated_degs}{DEGREES_SYMBOL} CW from E) *hardcoded TAN100*",
                           margin=dict(t=50)
                           )
         return \
             html.Br(),\
             html.Div(
-                [html.H3(f'Gridded Daily Velocities at {map_selection}',
+                [html.H3(f'Gridded Daily Velocities at {map_selection} *Hardcoded TAN100*',
                          style={"color": "DarkSlateGrey",
                                 "display": "inline-block",
                                 "width": "40%",
@@ -574,7 +676,7 @@ def n_e_velocity(map_selection, fig, fig2):
         return \
             html.Br(), \
             html.Div(
-                [html.H3(f'Gridded Daily Velocities at {map_selection}',
+                [html.H3(f'Gridded Daily Velocities at {map_selection} *hardcoded TAN100*',
                          style={"color": "DarkSlateGrey",
                                 "display": "inline-block",
                                 "width": "40%",
