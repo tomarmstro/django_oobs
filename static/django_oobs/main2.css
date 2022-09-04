@@ -49,7 +49,7 @@ ul {
 
 .content-section {
   background: #ffffff;
-  padding: 10px 100px;
+
   border: 100px solid var(--border_colour);
   border-radius: 3px;
   margin-bottom: 20px;
@@ -206,6 +206,14 @@ background-color: var(--background_colour);
 
 .card {
   border: 0px;
+}
+
+main_dash_app {
+    position: relative;
+    top: -28px;
+    left: -10px;
+    overflow: visible;
+
 }
 
 

@@ -46,8 +46,7 @@ PATH = pathlib.Path(__file__).parent
 pd.set_option('display.max_rows', None)
 app = DjangoDash('data', external_stylesheets=external_stylesheets)
 
-MOORINGS = ['GBRMYR', 'GBRPPS', 'GBRLSL', 'GBRHIS', 'GBROTE', 'GBRCCH', 'NWSBAR', 'NWSLYN', 'NWSROW', 'NWSBRW',
-            'NRSYON']
+MOORINGS = ['GBRLSL', 'GBRLSH', 'GBRMYR', 'GBRPPS', 'GBRHIS', 'GBROTE', 'GBRCCH', 'GBRELR', 'GBRHIN', 'NWSROW', 'NWSLYN', 'NWSBAR', 'NWSBRW', 'TAN100']
 map_selection = "GBRMYR"
 active_tab = 'vcur_tab'
 map_colours = ['#808080', '#ff0000']
@@ -184,7 +183,7 @@ def colourscale_rangeslider():
         style={'width': '20%'}
     )
 
-def more_info_button():
+def temp_more_info_button():
     return dbc.Button("Info",
                 id="more-info-modal",
                 color='info',
@@ -196,10 +195,20 @@ def more_info_button():
                        "right": "0px",
                        "position": "absolute"})
 
+def vel_more_info_button():
+    return dbc.Button("Info",
+                id="more-info-modal",
+                color='info',
+                style={"color": "DarkSlateGrey",
+                       "display": "inline-block",
+                       "width": "10%",
+                       "margin-right": "150px",
+                       "verticalAlign": "top",
+                       "right": "0px",
+                       "position": "absolute"})
 
-vel_tabs = html.Div(
-    [
-        dbc.Tabs(
+def vel_tabs():
+    return dbc.Tabs(
             [
                 dbc.Tab(label="Cross and Alongshore",
                         tab_id="cross_alongshore_tab",
@@ -225,11 +234,12 @@ vel_tabs = html.Div(
             ],
             id="vel_tabs",
             active_tab="cross_alongshore_tab",
+            className="custom-tabs",
 
-        ),
-        html.Div(id="vel_tab_content"),
-    ]
-)
+        )
+        # html.Div(id="vel_tab_content")
+
+
 
 
 temp_tabs = html.Div(
@@ -270,7 +280,7 @@ temp_tabs = html.Div(
             id="temp_tabs",
             active_tab="climatology_tab",
         ),
-        html.Div(id="temp_tab_content"),
+        # html.Div(id="temp_tab_content"),
     ]
 )
 
@@ -311,7 +321,7 @@ def toggle_modal(n_open, n_close, is_open):
 # Layout
 app.layout = html.Div(
     # style={"backgroundColor": DARK_BLUE_COLOUR, 'display': 'inline-block', 'width': '100%'},
-    id="big-app-container",
+    id="container",
     children=[
         html.Br(),
         map_modal,
@@ -321,14 +331,15 @@ app.layout = html.Div(
         # colourscale_rangeslider(),
         html.Div(id='tab_content',
                  className="p-4"
-        ),
+            ),
         # vel_tabs,
-
-
-    ], style={
+        ], style={
                         'width': '100%',
                         # 'height': '800px',
                         'backgroundColor': BODY_BACKGROUND_COLOUR,
+                        'padding-right': '0px',
+                        'padding-left': '0px',
+
                         }
 )
 
@@ -355,7 +366,7 @@ def render_tab_content(active_tab, clickData):
     print(active_tab)
 
     if active_tab == 'vel_tab':
-        return vel_tabs, html.Div(id='vel_tab_content')
+        return vel_tabs(), html.Div(id='vel_tab_content')
 
     if active_tab == 'temp_tab':
         return temp_tabs, html.Div(id='temp_tab_content')
@@ -477,7 +488,7 @@ def temperature(map_selection, fig):
                                     "width": "40%",
                                     "margin-left": "20px",
                                     "verticalAlign": "top"}),
-                     more_info_button()],
+                     temp_more_info_button()],
                 ), \
                 dcc.Graph(
                     id='ucur_tab', figure=fig)
@@ -494,73 +505,94 @@ def daily_temperature(map_selection, fig):
                            style={"color": "DarkSlateGrey"}), dcc.Graph(id='daily_temp_tab', figure=fig)
 
 def climatology(map_selection, fig):
-    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/nc").resolve()
-    if map_selection not in ['TAN100', 'GBRPPS', 'GBRMYR']:
+    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/CLIM").resolve()
+    if map_selection not in MOORINGS:
         map_selection = 'GBRMYR'
-    for file in os.listdir(nc_files):
-        nc_file = xr.open_dataset(nc_files.joinpath('GBRMYR_LTSP_gridded_daily_MC.nc'))
-        fig.add_trace(go.Contour(z=nc_file['CLIM'][450:1200],
-                                 x=nc_file['CLIM']['TIME'][450:1200],
-                                 transpose=True,
-                                 line_width=0,
-                                 zmax=35,
-                                 zmin=10,
-                                 ncontours=40,
-                                 ))
-        fig['layout']['yaxis']['autorange'] = "reversed"
-        fig.update_xaxes(title_text='Time',
-                         tickformat="%B") #set x axis labels to month only
-        fig.update_yaxes(title_text='Depth')
-        return html.Br(),\
-               html.Div([html.H3(f'Climatology at {map_selection} *hardcoded GBRMYR*',
-                                 style={"color": "DarkSlateGrey"}), dcc.Graph(id='climatology_tab', figure=fig)])
+    # for file in os.listdir(nc_files):
+    nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_CLIM.nc'))
+    fig.add_trace(go.Contour(z=nc_file['CLIM'],
+                             x=nc_file['CLIM']['TIME'],
+                             transpose=True,
+                             line_width=0,
+                             zmax=35,
+                             zmin=10,
+                             ncontours=40,
+                             ))
+    fig['layout']['yaxis']['autorange'] = "reversed"
+    fig.update_xaxes(title_text='Time',
+                     tickformat="%B") #set x axis labels to month only
+    fig.update_yaxes(title_text='Depth')
+    return html.Br(),\
+        html.Div(
+            [html.H3(f'Climatology at {map_selection}',
+                     style={"color": "DarkSlateGrey",
+                            "display": "inline-block",
+                            "width": "40%",
+                            "margin-left": "20px",
+                            "verticalAlign": "top"}),
+            temp_more_info_button()],
+           ), \
+       dcc.Graph(id='climatology_tab', figure=fig)
+
 
 def gridded_temperature(map_selection, fig):
-    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/gridded/GBRMYR").resolve()
-    if map_selection not in ['TAN100', 'GBRPPS', 'GBRMYR']:
+    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/CLIM").resolve()
+    if map_selection not in MOORINGS:
         map_selection = 'GBRMYR'
-    for file in os.listdir(nc_files):
-        nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_LTSP_gridded_daily_MC.nc'))
-        fig.add_trace(go.Contour(z=nc_file['TEMP'],
-                                 x=nc_file['TIME'],
-                                 transpose=True,
-                                 line_width=0,
-                                 zmax=35,
-                                 zmin=10,
-                                 ncontours=40,
-                                 ))
-        fig['layout']['yaxis']['autorange'] = "reversed"
-        fig.update_xaxes(title_text='Time')
-        fig.update_yaxes(title_text='Depth')
-        return html.Br(),\
-               html.H3(f'Gridded temperature at {map_selection} *hardcoded GBRMYR*',
-                       style={"color": "DarkSlateGrey"}), dcc.Graph(id='gridded_temp_tab', figure=fig)
+    # for file in os.listdir(nc_files):
+    nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_TEMP_daily.nc'))
+    # nc_file = nc_file.to_dataframe()
+    # nc_file = nc_file.groupby('TIME').mean().reset_index()
+    # nc_file = nc_file.groupby([nc_file['TIME']]).mean()
+    # nc_file = nc_file.groupby(nc_file.index.strftime("%m%d")).mean()
+    fig.add_trace(go.Contour(z=nc_file['TEMP'],
+                             x=nc_file['TIME'],
+                             transpose=True,
+                             line_width=0,
+                             zmax=35,
+                             zmin=10,
+                             ncontours=40,
+                             ))
+    fig['layout']['yaxis']['autorange'] = "reversed"
+    fig.update_xaxes(title_text='Time')
+    fig.update_yaxes(title_text='Depth')
+    return html.Br(),\
+           html.Div([html.H3(f'Gridded temperature at {map_selection}',
+                 style={"color": "DarkSlateGrey",
+                        "display": "inline-block",
+                        "width": "40%",
+                        "margin-left": "20px",
+                        "verticalAlign": "top"}),
+                     temp_more_info_button()], dcc.Graph(id='gridded_temp_tab', figure=fig),
+            )
 
 def anomaly(map_selection, fig):
-    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/nc").resolve()
-    if map_selection not in ['TAN100', 'GBRPPS', 'GBRMYR']:
+    # nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/nc").resolve()
+    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/CLIM").resolve()
+    if map_selection not in MOORINGS:
         map_selection = 'GBRMYR'
-    for file in os.listdir(nc_files):
-        nc_file = xr.open_dataset(nc_files.joinpath('GBRMYR_LTSP_gridded_daily_MC.nc'))
-        anomaly = nc_file['CLIM']-nc_file['TEMP']
-        fig.add_trace(go.Contour(z=anomaly,
-                                 transpose=True,
-                                 line_width=0,
-                                 zmax=5,
-                                 zmin=-5,
-                                 ncontours=20,
-                                 ))
-        fig['layout']['yaxis']['autorange'] = "reversed"
-        fig.update_xaxes(title_text='Time')
-        fig.update_yaxes(title_text='Depth')
-        return html.Br(),\
-               html.Div([html.H3(f'Temperature anomalies at {map_selection} *hardcoded GBRMYR*',
-                                 style={"color": "DarkSlateGrey"}), dcc.Graph(id='anomaly_tab', figure=fig)])
+    # for file in os.listdir(nc_files):
+    nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_TEMP_daily.nc'))
+    nc_file_clim = xr.open_dataset(nc_files.joinpath(map_selection + '_CLIM.nc'))
+    anomaly = nc_file_clim['CLIM']-nc_file['TEMP']
+    fig.add_trace(go.Contour(z=anomaly,
+                             transpose=True,
+                             line_width=0,
+                             zmax=5,
+                             zmin=-5,
+                             ncontours=20,
+                             ))
+    fig['layout']['yaxis']['autorange'] = "reversed"
+    fig.update_xaxes(title_text='Time')
+    fig.update_yaxes(title_text='Depth')
+    return html.Br(),\
+           html.Div([html.H3(f'Temperature anomalies at {map_selection}',
+                             style={"color": "DarkSlateGrey"}), dcc.Graph(id='anomaly_tab', figure=fig),
+                     temp_more_info_button()])
 
 
 
 def daily_velocity(map_selection, fig, fig2):
-
     nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/gridded/TAN100").resolve()
     for file in os.listdir(nc_files):
         nc_file = xr.open_dataset(nc_files.joinpath('TAN100_LTSP_VV_daily.nc'))
@@ -616,7 +648,7 @@ def daily_velocity(map_selection, fig, fig2):
                                 "width": "40%",
                                 "margin-left": "20px",
                                 "verticalAlign": "top"}),
-                 more_info_button()],
+                 vel_more_info_button()],
             ), \
             dcc.Graph(id='local_vel_tab', figure=fig,
                       # title=f"Daily Cross-Shelf velocity at {map_selection} (Theta deg CW from E)"
@@ -635,32 +667,33 @@ def n_e_velocity(map_selection, fig, fig2):
         fig2.update_xaxes(title_text='Time')
         fig2.update_yaxes(title_text='Depth')
         rotated_degs = "{:.2f}".format(nc_file['VV'].attrs['reference_datum degrees'])
-
-        fig.add_trace(go.Contour(z=nc_file['VCUR'],
-                                 y=nc_file['DEPTH'],
-                                 x=nc_file['TIME'],
-                                 transpose=True,
-                                 line_width=0,
-                                 # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
-                                 zmax=1,
-                                 zmin=-1,
-                                 ncontours=40,
-                                 ),
-                      # row=1, col=1
-                      )
-
-        fig2.add_trace(go.Contour(z=nc_file['UCUR'],
-                                  y=nc_file['DEPTH'],
-                                  x=nc_file['TIME'],
-                                  transpose=True,
-                                  line_width=0,
-                                  # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
-                                  zmax=1,
-                                  zmin=-1,
-                                  ncontours=40,
-                                  ),
-                       # row=2, col=1
-                       )
+        fig.add_trace(
+            go.Contour(
+                z=nc_file['VCUR'],
+                y=nc_file['DEPTH'],
+                x=nc_file['TIME'],
+                transpose=True,
+                line_width=0,
+                # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
+                zmax=1,
+                zmin=-1,
+                ncontours=40,
+                ),
+            )
+        fig2.add_trace(
+            go.Contour(
+                z=nc_file['UCUR'],
+                y=nc_file['DEPTH'],
+                x=nc_file['TIME'],
+                transpose=True,
+                line_width=0,
+                # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
+                zmax=1,
+                zmin=-1,
+                ncontours=40,
+                ),
+                # row=2, col=1
+            )
         fig.update_layout(height=300,
                           width=1000,
                           # title=f"Daily Cross-Shore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from N)"
@@ -677,13 +710,14 @@ def n_e_velocity(map_selection, fig, fig2):
             html.Br(), \
             html.Div(
                 [html.H3(f'Gridded Daily Velocities at {map_selection} *hardcoded TAN100*',
-                         style={"color": "DarkSlateGrey",
-                                "display": "inline-block",
-                                "width": "40%",
-                                "margin-left": "20px",
-                                "verticalAlign": "top"}),
-                 more_info_button()],
-            ), \
+                    style={
+                        "color": "DarkSlateGrey",
+                        "display": "inline-block",
+                        "width": "40%",
+                        "margin-left": "20px",
+                        "verticalAlign": "top"}),
+                 vel_more_info_button()],
+                ), \
             dcc.Graph(id='local_vel_tab', figure=fig,
                       # title=f"Daily Cross-Shelf velocity at {map_selection} (Theta deg CW from E)"
                       ), \

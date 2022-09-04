@@ -5,7 +5,7 @@ from django_oobs.dash_apps.finished_apps import map_app
 # from django_oobs.dash_apps.finished_apps import temperature_app
 
 urlpatterns = [
-    path('', views.about, name='django_oobs-about'),
-    # path('temperature/', views.temperature, name='django_oobs-temperature'),
+    path('about/', views.about, name='django_oobs-about'),
+    path('', views.home, name='django_oobs-home'),
     path('data/', views.data, name='django_oobs-data'),
 ]

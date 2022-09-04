@@ -22,8 +22,8 @@ def about(request):
 
     return render(request, 'django_oobs/about.html', {'title': 'about'})
 
-# def temperature(request):
-#     return render(request, 'django_oobs/temperature.html', {'title': 'temperature'})
+def home(request):
+    return render(request, 'django_oobs/home.html', {'title': 'home'})
 
 def data(request):
     return render(request, 'django_oobs/data.html', {'title': 'data'})
