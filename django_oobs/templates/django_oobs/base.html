@@ -50,12 +50,12 @@
               <a class="nav-item nav-link" href="#">Register</a>
                 </div>
               <div class="navbar-nav custom-header-icons-right">
-                <a href="https://imos.org.au/" class="nav-item nav-link"><img src="{% static 'twitter2.png' %}" width="40" height="40" ></a>
+                <a href="https://twitter.com/IMOS_AUS" class="nav-item nav-link"><img src="{% static 'twitter2.png' %}" width="40" height="40" ></a>
 <!--                <a href="https://imos.org.au/" class="fa fa-facebook"></a>-->
-                <a href="https://imos.org.au/" class="nav-item nav-link"><img src="{% static 'facebook2.png' %}" width="40" height="40" ></a>
-                <a href="https://imos.org.au/" class="nav-item nav-link"><img src="{% static 'youtube2.png' %}" width="40" height="40" ></a>
-                <a href="https://imos.org.au/" class="nav-item nav-link"><img src="{% static 'insta.png' %}" width="40" height="40" ></a>
-                <a href="https://imos.org.au/" class="nav-item nav-link"><img src="{% static 'linkedin2.png' %}" width="40" height="40" ></a>
+                <a href="https://www.facebook.com/IntegratedMarineObservingSystem" class="nav-item nav-link"><img src="{% static 'facebook2.png' %}" width="40" height="40" ></a>
+                <a href="https://www.youtube.com/user/IMOS5395" class="nav-item nav-link"><img src="{% static 'youtube2.png' %}" width="40" height="40" ></a>
+                <a href="https://www.instagram.com/imos_australia/?hl=en" class="nav-item nav-link"><img src="{% static 'insta.png' %}" width="40" height="40" ></a>
+                <a href="https://au.linkedin.com/company/imos_aus" class="nav-item nav-link"><img src="{% static 'linkedin2.png' %}" width="40" height="40" ></a>
 <!--                <a class="nav-item nav-link" href="{% url 'django_oobs-data' %}"><img src="{% static 'IMOS_logo-stacked.png' %}"></a>-->
             </div>
             </div>
@@ -64,39 +64,51 @@
       </nav>
     </header>
 
-
+    <div>
     {% block content %}
     {% endblock %}
-
+    </div>
+<!--    {% block footer %}-->
+<!--    {% endblock %}-->
     <div class="footer">
         <div class="footer-content">
             <div class="row mt-5 pt-5">
                 <div class="column" >
                     <div class="container-fluid">
                         <div class="footer text">
-                            <p>Contacts: <br>
+                            <p><br><br><br><br>
+                                <center>
+                                <h3>Contacts</h3>
                                 AIMS <br>
                                 IMOS <br>
                                 NCRIS <br>
-                                etc</p>
+                                etc
+                                </center>
+                            </p>
                         </div>
                     </div>
                 </div>
                 <div class="column" >
                     <div class="container-fluid">
                         <div class="footer text">
-                        <p>Australia’s Integrated Marine Observing System (IMOS) is enabled by the National Collaborative Research Infrastructure Strategy (NCRIS).
-                        It is operated by a consortium of institutions as an unincorporated joint venture, with the University of Tasmania as Lead Agent. www.imos.org.au</p>
+                        <p><br><br><br><br>
+                            <center>
+                            Australia’s Integrated Marine Observing System (IMOS) is enabled by the National Collaborative Research Infrastructure Strategy (NCRIS).
+                        It is operated by a consortium of institutions as an unincorporated joint venture, with the University of Tasmania as Lead Agent. www.imos.org.au
+                            </center>
+                            </p>
                         </div>
                     </div>
                 </div>
                 <div class="column">
                     <div class="container-fluid">
+                        <center>
                         <a href="https://www.dese.gov.au/ncris" class="nav-item nav-link"><img src="{% static 'ncris-logo.png' %}" width="290" height="210"></a>
                         <div class="footer text">
                             <p>Australia’s Integrated Marine Observing System (IMOS) is enabled by the National Collaborative Research Infrastructure Strategy (NCRIS).
                             It is operated by a consortium of institutions as an unincorporated joint venture, with the University of Tasmania as Lead Agent. www.imos.org.au</p>
                         </div>
+                        </center>
                     </div>
                 </div>
             </div>

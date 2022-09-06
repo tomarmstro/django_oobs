@@ -206,15 +206,29 @@ background-color: var(--background_colour);
 
 .card {
   border: 0px;
+
 }
 
 main_dash_app {
     position: relative;
-    top: -28px;
-    left: -10px;
-    overflow: visible;
+
+
 
 }
 
+.container {
+  width: 500%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+  flex-flow: wrap;
+
+
+}
+
+adaptive_size {
+    height: 50vh;
+}
 
 
