@@ -665,6 +665,7 @@ def daily_velocity(map_selection, fig, fig2):
             ),
             # row=1, col=1
         )
+        fig['layout']['yaxis']['autorange'] = "reversed"
         fig2.add_trace(
             go.Contour(
                 z=nc_file['VV'],
@@ -679,6 +680,7 @@ def daily_velocity(map_selection, fig, fig2):
             ),
         # row=2, col=1
         )
+        fig2['layout']['yaxis']['autorange'] = "reversed"
         fig.update_layout(
             height=300,
             width=1000,
@@ -736,6 +738,7 @@ def n_e_velocity(map_selection, fig, fig2):
                 ncontours=40,
                 ),
             )
+        fig['layout']['yaxis']['autorange'] = "reversed"
         fig2.add_trace(
             go.Contour(
                 z=nc_file['UCUR'],
@@ -750,6 +753,7 @@ def n_e_velocity(map_selection, fig, fig2):
                 ),
                 # row=2, col=1
             )
+        fig2['layout']['yaxis']['autorange'] = "reversed"
         fig.update_layout(height=300,
                           width=1000,
                           # title=f"Daily Cross-Shore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from N)"
