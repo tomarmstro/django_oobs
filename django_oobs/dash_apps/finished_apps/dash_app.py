@@ -40,7 +40,7 @@ PATH = pathlib.Path(__file__).parent
 pd.set_option('display.max_rows', None)
 app = DjangoDash('data', external_stylesheets=external_stylesheets)
 
-MOORINGS = ['GBRLSL', 'GBRLSH', 'GBRMYR', 'GBRPPS', 'GBRHIS', 'GBROTE', 'GBRCCH', 'GBRELR', 'GBRHIN', 'NWSROW', 'NWSLYN', 'NWSBAR', 'NWSBRW', 'TAN100']
+MOORINGS = ['GBRLSL', 'GBRLSH', 'GBRMYR', 'GBRPPS', 'GBRHIS', 'GBROTE', 'GBRCCH', 'GBRELR', 'GBRHIN', 'NWSROW', 'NWSLYN', 'NWSBAR', 'NWSBRW', 'TAN100', 'NRSYON', 'NRSDAR']
 map_selection = "GBRHIS"
 active_tab = 'vcur_tab'
 map_colours = ['#808080', '#ff0000']
@@ -539,34 +539,39 @@ def sub_temperature_tabs(temp_tabs, clickData):
 #                            style={"color": "DarkSlateGrey"}), dcc.Graph(id='daily_temp_tab', figure=fig)
 
 def climatology(map_selection, fig):
-    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/CLIM").resolve()
-    if map_selection not in MOORINGS:
-        map_selection = 'GBRHIS'
-    # for file in os.listdir(nc_files):
-    nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_CLIM.nc'))
-    fig.add_trace(go.Contour(z=nc_file['CLIM'],
-                             x=nc_file['CLIM']['TIME'],
-                             transpose=True,
-                             line_width=0,
-                             zmax=35,
-                             zmin=10,
-                             ncontours=40,
-                             ))
-    fig['layout']['yaxis']['autorange'] = "reversed"
-    fig.update_xaxes(title_text='Time',
-                     tickformat="%B") #set x axis labels to month only
-    fig.update_yaxes(title_text='Depth')
-    return html.Br(),\
-        html.Div(
-            dbc.Row([html.H3(f'Climatology at {map_selection}',
-                style={"color": "DarkSlateGrey",
-                    "display": "inline-block",
-                    "width": "40%",
-                    "margin-left": "20px",
-                    "verticalAlign": "top"}),
-            temp_more_info_modal],
-            justify="left", align="start")), \
-            dcc.Graph(id='climatology_tab', figure=fig)
+    while True:
+        try:
+            nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/CLIM").resolve()
+            if map_selection not in MOORINGS:
+                map_selection = 'GBRHIS'
+            # for file in os.listdir(nc_files):
+            nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_CLIM.nc'))
+            fig.add_trace(go.Contour(z=nc_file['CLIM'],
+                                     x=nc_file['CLIM']['TIME'],
+                                     transpose=True,
+                                     line_width=0,
+                                     zmax=35,
+                                     zmin=10,
+                                     ncontours=40,
+                                     ))
+            fig['layout']['yaxis']['autorange'] = "reversed"
+            fig.update_xaxes(title_text='Time',
+                             tickformat="%B") #set x axis labels to month only
+            fig.update_yaxes(title_text='Depth')
+            return html.Br(),\
+                html.Div(
+                    dbc.Row([html.H3(f'Climatology at {map_selection}',
+                        style={"color": "DarkSlateGrey",
+                            "display": "inline-block",
+                            "width": "40%",
+                            "margin-left": "20px",
+                            "verticalAlign": "top"}),
+                    temp_more_info_modal],
+                    justify="left", align="start")), \
+                    dcc.Graph(id='climatology_tab', figure=fig)
+
+        except FileNotFoundError:
+            return html.Br(), html.H1("Error: File not found.")
 
 
 
