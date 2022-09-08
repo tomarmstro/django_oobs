@@ -40,23 +40,32 @@ PATH = pathlib.Path(__file__).parent
 pd.set_option('display.max_rows', None)
 app = DjangoDash('data', external_stylesheets=external_stylesheets)
 
-MOORINGS = ['GBRLSL', 'GBRLSH', 'GBRMYR', 'GBRPPS', 'GBRHIS', 'GBROTE', 'GBRCCH', 'GBRELR', 'GBRHIN', 'NWSROW', 'NWSLYN', 'NWSBAR', 'NWSBRW', 'TAN100', 'NRSYON', 'NRSDAR']
+GBR = ['GBRLSL', 'GBRLSH', 'GBRMYR', 'GBRPPS', 'GBRHIS', 'GBROTE', 'GBRCCH', 'GBRELR', 'GBRHIN']
+NWS = ['NWSROW', 'NWSLYN', 'NWSBAR', 'NWSBRW', 'TAN100']
+NRS = ['NRSYON', 'NRSDAR', 'NRSKAI', 'NRSMAI', 'NRSNIN', 'NRSROT', 'NRSNSI']
+ITF = ['ITFFTB', 'ITFMHB', 'ITFTIS', 'ITFJBG']
+KIM = ['KIM050', 'KIM100', 'KIM400'] #KIM200?
+CAM = ['CAM050', 'CAM150'] #CAM100 or CAM150?
+PIL = ['PIL050', 'PIL100', 'PIL200']
+MOORINGS = GBR + NWS + NRS + ITF + KIM + CAM + PIL
+# MOORINGS = ['GBRLSL', 'GBRLSH', 'GBRMYR', 'GBRPPS', 'GBRHIS', 'GBROTE', 'GBRCCH', 'GBRELR', 'GBRHIN', 'NWSROW', 'NWSLYN', 'NWSBAR', 'NWSBRW', 'TAN100', 'NRSYON', 'NRSDAR']
 map_selection = "GBRHIS"
 active_tab = 'vcur_tab'
-map_colours = ['#808080', '#ff0000']
+map_colours = ['#11c216', '#808080']
 
 # Create map
 def render_map():
     map_data = pd.read_excel('sites.xlsx')
     map_data = pd.DataFrame(map_data)
-    map_data = map_data.drop(columns=['x', 'y', 'd'])
+    map_data = map_data.drop(columns=['x', 'y'])
     return [dcc.Graph(id='moorings_map', figure=px.scatter_mapbox
         (
         map_data,
         lat=map_data['Latitude'],
         lon=map_data['Longitude'],
         color='Group',
-        # color='Site',
+        size=map_data['d'],
+        size_max=10,
         color_discrete_sequence=map_colours,
         hover_name='Site',
         zoom=3.3,
@@ -432,6 +441,11 @@ def render_tab_content(active_tab, clickData):
     # if active_tab == 'daily_temp_tab':
     #     return daily_temperature(map_selection, fig)
 
+
+
+
+
+
 @app.callback(Output(component_id="vel_tab_content", component_property="children"),
               [Input(component_id="vel_tabs", component_property="active_tab"),
                Input(component_id="moorings_map", component_property="clickData")])
@@ -448,8 +462,21 @@ def sub_velocity_tabs(vel_tabs, clickData):
     if vel_tabs == "cross_alongshore_tab":
         return daily_velocity(map_selection, fig, fig2)
     elif vel_tabs == "ne_tab":
-        return n_e_velocity(map_selection, fig, fig2)
-    return html.P("This shouldn't ever be displayed...")
+        return html.Br(), \
+            html.Div(
+                dbc.Row([html.H3(f'Gridded Daily Velocities at {map_selection} *hardcoded TAN100*',
+                    style={
+                        "color": "DarkSlateGrey",
+                        "display": "inline-block",
+                        "width": "40%",
+                        "margin-left": "20px",
+                        "verticalAlign": "top"}),
+                 vel_more_info_modal],
+                justify="left", align="start")), \
+               n_e_velocity(map_selection, fig, fig2, value)
+    # return html.P("This shouldn't ever be displayed...")
+
+
 
 
 @app.callback(Output(component_id="temp_tab_content", component_property="children"),
@@ -623,8 +650,8 @@ def anomaly(map_selection, fig):
             z=anomaly,
             transpose=True,
             line_width=0,
-            zmax=5,
-            zmin=-5,
+            zmax=3,
+            zmin=-3,
             ncontours=20,
             )
         )
@@ -716,7 +743,9 @@ def daily_velocity(map_selection, fig, fig2):
                 # title=f"Daily Alongshore velocity at {map_selection} (Theta deg CW from E)"
                 ),
 
-def n_e_velocity(map_selection, fig, fig2):
+
+
+def n_e_velocity(map_selection, fig, fig2, value):
     nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/gridded/TAN100").resolve()
     for file in os.listdir(nc_files):
         nc_file = xr.open_dataset(nc_files.joinpath('TAN100_LTSP_VV_daily.nc'))
@@ -733,8 +762,8 @@ def n_e_velocity(map_selection, fig, fig2):
                 transpose=True,
                 line_width=0,
                 # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
-                zmax=1,
-                zmin=-1,
+                zmax=value[0],
+                zmin=value[1],
                 ncontours=40,
                 ),
             )
@@ -767,17 +796,6 @@ def n_e_velocity(map_selection, fig, fig2):
                            margin=dict(t=50)
                            )
         return \
-            html.Br(), \
-            html.Div(
-                dbc.Row([html.H3(f'Gridded Daily Velocities at {map_selection} *hardcoded TAN100*',
-                    style={
-                        "color": "DarkSlateGrey",
-                        "display": "inline-block",
-                        "width": "40%",
-                        "margin-left": "20px",
-                        "verticalAlign": "top"}),
-                 vel_more_info_modal],
-                justify="left", align="start")), \
             dcc.Graph(id='local_vel_tab', figure=fig,
                       # title=f"Daily Cross-Shelf velocity at {map_selection} (Theta deg CW from E)"
                       ), \
