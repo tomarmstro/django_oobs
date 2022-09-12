@@ -8,4 +8,5 @@ urlpatterns = [
     path('about/', views.about, name='django_oobs-about'),
     path('', views.home, name='django_oobs-home'),
     path('data/', views.data, name='django_oobs-data'),
+    path('todo/', views.todo, name='django_oobs-todo'),
 ]
