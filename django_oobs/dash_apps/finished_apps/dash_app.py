@@ -49,7 +49,7 @@ CAM = ['CAM050', 'CAM150'] #CAM100 or CAM150?
 PIL = ['PIL050', 'PIL100', 'PIL200']
 MOORINGS = GBR + NWS + NRS + ITF + KIM + CAM + PIL
 # MOORINGS = ['GBRLSL', 'GBRLSH', 'GBRMYR', 'GBRPPS', 'GBRHIS', 'GBROTE', 'GBRCCH', 'GBRELR', 'GBRHIN', 'NWSROW', 'NWSLYN', 'NWSBAR', 'NWSBRW', 'TAN100', 'NRSYON', 'NRSDAR']
-map_selection = "GBRHIS"
+map_selection = "TAN100"
 active_tab = 'vcur_tab'
 map_colours = ['#11c216', '#808080']
 
@@ -168,23 +168,23 @@ def fig_layout(fig):
         margin=dict(t=50)
     )
 
-def colourscale_rangeslider():
-    return html.Div(
-        html.Div(
-            [
-                dcc.Input(type='text', value=0),
-                dcc.RangeSlider(
-                    id='condition-range-slider',
-                    min=0,
-                    max=30,
-                    value=[10, 15],
-                    allowCross=False
-                ),
-                dcc.Input(type='text', value=100)
-            ],
-            style={"display": "grid", "grid-template-columns": "10% 40% 10%"}),
-        style={'width': '20%'}
-    )
+# def colourscale_rangeslider():
+#     return html.Div(
+#         html.Div(
+#             [
+#                 dcc.Input(type='text', value=0),
+#                 dcc.RangeSlider(
+#                     id='condition-range-slider',
+#                     min=0,
+#                     max=30,
+#                     value=[10, 15],
+#                     allowCross=False
+#                 ),
+#                 dcc.Input(type='text', value=100)
+#             ],
+#             style={"display": "grid", "grid-template-columns": "10% 40% 10%"}),
+#         style={'width': '20%'}
+#     )
 
 vel_tabs = html.Div(
     [dbc.Tabs(
@@ -383,6 +383,30 @@ def toggle_temp_more_info_modal(n_open, n_close, is_open):
         return not is_open
     return is_open
 
+contour_rangeslider = html.Div(
+            # className="contour_rangeslider",
+            # children=
+            [
+            html.H5("Adjust z-axis bounds"),
+            dcc.RangeSlider(min=-1, max=1, step=0.01, value=[-0.25, 0.25], id='slider', allowCross=False,
+                            tooltip={
+                                "placement": "bottom",
+                                # "always_visible": True
+                            },
+                            # style={
+                            #     "background-color": IMOS_DEEP_BLUE_COLOUR
+                            # }
+                            ),
+
+            # html.Div(id='slider-output')
+            ])
+
+@app.callback(
+    Output('slider-output', 'children'),
+    [Input('slider', 'value')])
+def update_output(value):
+    return value
+
 # Layout
 app.layout = html.Div(
     # style={"backgroundColor": DARK_BLUE_COLOUR, 'display': 'inline-block', 'width': '100%'},
@@ -391,12 +415,13 @@ app.layout = html.Div(
         html.Br(),
         map_modal,
         html.Br(),
+
         build_tabs(),
         # velocity_toggle(),
-        # colourscale_rangeslider(),
         html.Div(id='tab_content',
                  className="p-4"
             ),
+
         ],
     style={
         'width': '100%',
@@ -411,61 +436,58 @@ app.layout = html.Div(
         }
     )
 
+
+# my_slider = html.Div([
+#     dcc.RangeSlider(0, 20, 1, value=[5, 15], id='slider'),
+#     html.Div(id='slider_value')
+# ])
 # ---------------------------------------------------------------
 # Get tab content
 @app.callback(
     Output(component_id='tab_content', component_property='children'),
-    Input(component_id='tabs', component_property='active_tab'),
-    Input(component_id="moorings_map", component_property="clickData"))
+    [Input(component_id='tabs', component_property='active_tab'),
+    Input(component_id="moorings_map", component_property="clickData")])
 def render_tab_content(active_tab, clickData):
     fig = go.Figure()
     fig_layout(fig)
     fig2 = go.Figure()
     fig_layout(fig2)
-    map_selection = 'GBRHIS'
+    map_selection = 'TAN100'
     if clickData is not None:
         map_selection = clickData['points'][0]['hovertext']
         print(f"{map_selection} selected from the map.")
     print(f"{active_tab} selected.")
 
     if active_tab == 'vel_tab':
-        return vel_tabs, html.Div(id='vel_tab_content')
+        return vel_tabs, html.Div(id='vel_tab_content'), contour_rangeslider
 
     if active_tab == 'temp_tab':
         return temp_tabs, html.Div(id='temp_tab_content')
         # return temperature(map_selection, fig)
 
-    # if active_tab == 'vcur_tab':
-    #     return ne_velocity(map_selection, fig, fig2)
-    #
-    # if active_tab == 'daily_temp_tab':
-    #     return daily_temperature(map_selection, fig)
-
-
-
-
-
 
 @app.callback(Output(component_id="vel_tab_content", component_property="children"),
               [Input(component_id="vel_tabs", component_property="active_tab"),
-               Input(component_id="moorings_map", component_property="clickData")])
-def sub_velocity_tabs(vel_tabs, clickData):
+               Input(component_id="moorings_map", component_property="clickData"),
+                Input(component_id='slider', component_property='value')]
+               # Input(component_id="slider", component_property="slider_value")
+               )
+def sub_velocity_tabs(vel_tabs, clickData, value):
+    print("slider value is: ", value)
     fig = go.Figure()
     fig_layout(fig)
     fig2 = go.Figure()
     fig_layout(fig2)
-    map_selection = 'GBRHIS'
+    map_selection = 'TAN100'
     if clickData is not None:
         map_selection = clickData['points'][0]['hovertext']
         print(f"{map_selection} selected from the map.")
     print(f"{vel_tabs} selected.")
     if vel_tabs == "cross_alongshore_tab":
-        return daily_velocity(map_selection, fig, fig2)
+        return cross_along_velocity_tab_content(map_selection, fig, fig2, value)
     elif vel_tabs == "ne_tab":
-        return n_e_velocity(map_selection, fig, fig2)
+        return north_east_velocity_tab_content(map_selection, fig, fig2, value)
     # return html.P("This shouldn't ever be displayed...")
-
-
 
 
 @app.callback(Output(component_id="temp_tab_content", component_property="children"),
@@ -476,7 +498,7 @@ def sub_temperature_tabs(temp_tabs, clickData):
     fig_layout(fig)
     fig2 = go.Figure()
     fig_layout(fig2)
-    map_selection = 'GBRHIS'
+    map_selection = 'TAN100'
     if clickData is not None:
         map_selection = clickData['points'][0]['hovertext']
         print(f"{map_selection} selected from the map.")
@@ -488,78 +510,64 @@ def sub_temperature_tabs(temp_tabs, clickData):
     if temp_tabs == "climatology_tab":
         return climatology(map_selection, fig)
     elif temp_tabs == "gridded_temp_tab":
-        return gridded_temperature(map_selection, fig)
+        return \
+            gridded_temperature(map_selection, fig)
     elif temp_tabs == "anomaly_tab":
         return anomaly(map_selection, fig)
     return html.P("This shouldn't ever be displayed...")
 
 
+def cross_along_velocity_tab_content(map_selection, fig, fig2, value):
+    print("zmax: ", value[1])
+    print("zmin: ", value[0])
+    render_plots(map_selection=map_selection, time='2015', zmax=value[1], zmin=value[0], ncontours=40,
+                 directory='VV', file_prefix='_VV_daily.nc', fig=fig, variable='UU', fig2=fig2, variable_2='VV')
 
-# def ne_velocity(map_selection, fig, fig2):
-#     vcur_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/vcur").resolve()
-#     ucur_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/ucur").resolve()
-#     for file in os.listdir(vcur_files):
-#         mooring_site = file[0:6]
-#         fig.update_layout(
-#             height=300,
-#             width=1000,
-#             )
-#         fig2.update_layout(
-#             height=300,
-#             width=1000,
-#         )
-#         if mooring_site in MOORINGS and mooring_site == map_selection:
-#             vcur_file = pd.read_csv(vcur_files.joinpath(map_selection + '_vcur.csv'))
-#             fig.add_trace(go.Scatter(x=vcur_file['TIME'], y=vcur_file['VCUR'], name="NEMO"))
-#             ucur_file = pd.read_csv(ucur_files.joinpath(map_selection + '_ucur.csv'))
-#             fig2.add_trace(go.Scatter(x=ucur_file['TIME'], y=ucur_file['UCUR'], name="NEMO"))
-#             return html.Div([
-#                 html.H3(f'VCUR at {map_selection}', style={"color": "DarkSlateGrey"}),
-#                 dcc.Graph(
-#                 figure=fig),
-#                 html.H3(f'UCUR at {map_selection}', style={"color": "DarkSlateGrey"}),
-#                 dcc.Graph(
-#                 figure=fig2)],
-#                 style={'backgroundColor': BODY_BACKGROUND_COLOUR}
-#                 )
+    return \
+        html.Br(), \
+        html.Div(
+            dbc.Row([html.H3(f'Gridded Daily Velocities at {map_selection}',
+            style={"color": "DarkSlateGrey",
+                "display": "inline-block",
+                "width": "40%",
+                "margin-left": "20px",
+                "verticalAlign": "top",
+                'backgroundColor': BODY_BACKGROUND_COLOUR}),
+            vel_more_info_modal],
+            justify="left", align="start")), \
+        dcc.Graph(
+            id='local_vel_tab', figure=fig,
+            ), \
+        dcc.Graph(
+            id='local_vel_tab', figure=fig2,
+            ),
 
-# def temperature(map_selection, fig):
-#     csv_files = PATH.joinpath(os.path.abspath(os.curdir) + "/csv/temp").resolve()
-#     for file in os.listdir(csv_files):
-#         mooring_site = file[0:6]
-#         if mooring_site in MOORINGS and mooring_site == map_selection:
-#             csv_file = pd.read_csv(csv_files.joinpath(map_selection + '_temp.csv'))
-#             fig.add_trace(go.Scatter(x=csv_file['TIME'], y=csv_file['TEMP'], name="NEMO"))
-#             return \
-#                 html.Div(
-#                     [html.H3(f'Temperature at {map_selection}',
-#                              style={"color": "DarkSlateGrey",
-#                                     "display": "inline-block",
-#                                     "width": "40%",
-#                                     "margin-left": "20px",
-#                                     "verticalAlign": "top"}),
-#                      temp_more_info_button()],
-#                 ), \
-#                 dcc.Graph(
-#                     id='ucur_tab', figure=fig)
-#             # style={'backgroundColor': BODY_BACKGROUND_COLOUR})
-
-# def daily_temperature(map_selection, fig):
-#     csv_files = PATH.joinpath(os.path.abspath(os.curdir) + "/csv/daily_temp").resolve()
-#     for file in os.listdir(csv_files):
-#         mooring_site = file[0:6]
-#         if mooring_site in MOORINGS and mooring_site == map_selection:
-#             csv_file = pd.read_csv(csv_files.joinpath(map_selection + '_temp_dayavg.csv'))
-#             fig.add_trace(go.Scatter(x=csv_file['TIME'], y=csv_file['TEMP'], name="NEMO"))
-#             return html.H3(f'Daily averaged temperature at {map_selection}',
-#                            style={"color": "DarkSlateGrey"}), dcc.Graph(id='daily_temp_tab', figure=fig)
+def north_east_velocity_tab_content(map_selection, fig, fig2, value):
+    render_plots(map_selection=map_selection, time='2015', zmax=value[1], zmin=value[0], ncontours=40, directory='VV', file_prefix='_VV_daily.nc', fig=fig,
+                 variable='UCUR', fig2=fig2, variable_2='VCUR')
+    return \
+        html.Br(), \
+            html.Div(
+                dbc.Row([html.H3(f'Gridded Daily Velocities at {map_selection}',
+                    style={
+                        "color": "DarkSlateGrey",
+                        "display": "inline-block",
+                        "width": "40%",
+                        "margin-left": "20px",
+                        "verticalAlign": "top"}),
+                 vel_more_info_modal],
+                justify="left", align="start")), \
+        dcc.Graph(id='local_vel_tab', figure=fig,
+                  ), \
+        dcc.Graph(id='local_vel_tab', figure=fig2,
+                  ),
 
 def climatology(map_selection, fig):
     while True:
         try:
             nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/CLIM").resolve()
             if map_selection not in MOORINGS:
-                map_selection = 'GBRHIS'
+                map_selection = 'TAN100'
             # for file in os.listdir(nc_files):
             nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_CLIM.nc'))
             fig.add_trace(go.Contour(z=nc_file['CLIM'],
@@ -589,29 +597,10 @@ def climatology(map_selection, fig):
         except FileNotFoundError:
             return html.Br(), html.H1("Error: File not found.")
 
-
-
-
 def gridded_temperature(map_selection, fig):
-    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/CLIM").resolve()
-    if map_selection not in MOORINGS:
-        map_selection = 'GBRHIS'
-    nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_TEMP_daily.nc'))
-    nc_file = nc_file.sel(TIME='2015')
-    fig.add_trace(
-        go.Contour(
-            z=nc_file['TEMP'],
-            x=nc_file['TIME'],
-            transpose=True,
-            line_width=0,
-            zmax=35,
-            zmin=10,
-            ncontours=40,
-            )
-        )
-    fig['layout']['yaxis']['autorange'] = "reversed"
-    fig.update_xaxes(title_text='Time')
-    fig.update_yaxes(title_text='Depth')
+    render_plots(map_selection=map_selection, time='2015', zmax=35, zmin=10, ncontours=40,
+                 directory='CLIM', file_prefix='_TEMP_daily.nc', fig=fig, variable='TEMP', fig2=None,
+                 variable_2=None)
     return \
         html.Br(),\
         html.Div(
@@ -630,26 +619,9 @@ def gridded_temperature(map_selection, fig):
         dcc.Graph(id='gridded_temp_tab', figure=fig)
 
 def anomaly(map_selection, fig):
-    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/CLIM").resolve()
-    if map_selection not in MOORINGS:
-        map_selection = 'GBRHIS'
-    nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_TEMP_daily.nc'))
-    nc_file = nc_file.sel(TIME='2015')
-    anomaly = nc_file['CLIM']-nc_file['TEMP']
-    fig.add_trace(
-        go.Contour(
-            z=anomaly,
-            x=nc_file['TIME'],
-            transpose=True,
-            line_width=0,
-            zmax=2.5,
-            zmin=-2.5,
-            ncontours=20,
-            )
-        )
-    fig['layout']['yaxis']['autorange'] = "reversed"
-    fig.update_xaxes(title_text='Time')
-    fig.update_yaxes(title_text='Depth')
+    render_plots(map_selection=map_selection, time='2015', zmax=2.5, zmin=-2.5, ncontours=20,
+                 directory='CLIM', file_prefix='_TEMP_daily.nc', fig=fig, variable='CLIM', fig2=None,
+                variable_2='TEMP')
     return html.Br(),\
         html.Div(dbc.Row([html.H3(f'Temperature anomalies at {map_selection}',
             style={"color": "DarkSlateGrey",
@@ -661,168 +633,71 @@ def anomaly(map_selection, fig):
             justify="left", align="start")), dcc.Graph(id='anomaly_tab', figure=fig)
 
 
-def daily_velocity(map_selection, fig, fig2):
-    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/VV").resolve()
+def render_plots(map_selection, time, zmax, zmin, ncontours, directory, file_prefix, fig,  variable, fig2=None, variable_2=None):
+    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/" + directory).resolve()
     if map_selection not in MOORINGS:
-        map_selection = 'GBRHIS'
-    nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_VV_daily.nc'))
-    nc_file = nc_file.sel(TIME='2015')
-    # nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/gridded/TAN100").resolve()
-    # for file in os.listdir(nc_files):
-    # nc_file = xr.open_dataset(nc_files.joinpath('TAN100_LTSP_VV_daily.nc'))
+        map_selection = 'TAN100'
+    nc_file = xr.open_dataset(nc_files.joinpath(map_selection + file_prefix))
+    try:
+        nc_file = nc_file.sel(TIME=time)
+    except KeyError:
+        print(f"There is no 2015 data at {map_selection}")
+        pass
+    z = nc_file[variable]
+    if variable == 'CLIM':
+        z = nc_file[variable] - nc_file[variable_2]
+    elif variable == 'UU':
+        rotated_degs = nc_file[directory].attrs['reference_datum degrees']
+        fig.update_layout(title=f"Daily Cross-Shore Velocity at ({rotated_degs}{DEGREES_SYMBOL} CW from N)")
+        fig2.update_layout(title=f"Daily Along-Shore Velocity at ({rotated_degs}{DEGREES_SYMBOL} CW from N)")
+    elif variable =='UCUR':
+        fig.update_layout(title=f"Daily North-South Velocity")
+        fig2.update_layout(title=f"Daily East-West Velocity")
+
     fig.update_xaxes(title_text='Time')
     fig.update_yaxes(title_text='Depth')
-    fig2.update_xaxes(title_text='Time')
-    fig2.update_yaxes(title_text='Depth')
-    rotated_degs = "{:.2f}".format(nc_file['VV'].attrs['reference_datum degrees'])
+
     fig.add_trace(
         go.Contour(
-            z=nc_file['UU'],
+            z=z,
             y=nc_file['DEPTH'],
             x=nc_file['TIME'],
             transpose=True,
             line_width=0,
             # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
-            zmax=0.5,
-            zmin=-0.5,
-            ncontours=40,
+            zmax=zmax,
+            zmin=zmin,
+            ncontours=ncontours,
         ),
         # row=1, col=1
     )
     fig['layout']['yaxis']['autorange'] = "reversed"
-    fig2.add_trace(
-        go.Contour(
-            z=nc_file['VV'],
-            y=nc_file['DEPTH'],
-            x=nc_file['TIME'],
-            transpose=True,
-            line_width=0,
-            # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
-            zmax=0.5,
-            zmin=-0.5,
-            ncontours=40,
-        ),
-    # row=2, col=1
-    )
-    fig2['layout']['yaxis']['autorange'] = "reversed"
     fig.update_layout(
         height=300,
         width=1000,
-        # title=f"Daily Cross-Shore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from N)"
-        title = f"Daily Cross-Shore velocity at ({rotated_degs}{DEGREES_SYMBOL} CW from N) *hardcoded TAN100*",
         margin=dict(t=50)
-        )
-    fig2.update_layout(
-        height=300,
-        width=1000,
-        # title=f"Daily Alongshore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from E)"
-        title = f"Daily Alongshore velocity at ({rotated_degs}{DEGREES_SYMBOL} CW from E) *hardcoded TAN100*",
-        margin=dict(t=50)
-        )
-    return \
-        html.Br(),\
-        html.Div(
-            dbc.Row([html.H3(f'Gridded Daily Velocities at {map_selection} *Hardcoded TAN100*',
-            style={"color": "DarkSlateGrey",
-                "display": "inline-block",
-                "width": "40%",
-                "margin-left": "20px",
-                "verticalAlign": "top",
-                'backgroundColor': BODY_BACKGROUND_COLOUR}),
-            vel_more_info_modal],
-            justify="left", align="start")), \
-        dcc.Graph(
-            id='local_vel_tab', figure=fig,
-            # title=f"Daily Cross-Shelf velocity at {map_selection} (Theta deg CW from E)"
-            ), \
-        dcc.Graph(
-            id='local_vel_tab', figure=fig2,
-            # title=f"Daily Alongshore velocity at {map_selection} (Theta deg CW from E)"
-            ),
-
-
-
-def n_e_velocity(map_selection, fig, fig2):
-    nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/VV").resolve()
-    if map_selection not in MOORINGS:
-        map_selection = 'GBRHIS'
-    nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_VV_daily.nc'))
-    nc_file = nc_file.sel(TIME='2015')
-    # nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/gridded/TAN100").resolve()
-    # for file in os.listdir(nc_files):
-    # nc_file = xr.open_dataset(nc_files.joinpath('TAN100_LTSP_VV_daily.nc'))
-    fig.update_xaxes(title_text='Time')
-    fig.update_yaxes(title_text='Depth')
-    fig2.update_xaxes(title_text='Time')
-    fig2.update_yaxes(title_text='Depth')
-    rotated_degs = "{:.2f}".format(nc_file['VV'].attrs['reference_datum degrees'])
-    fig.add_trace(
-        go.Contour(
-            z=nc_file['VCUR'],
-            y=nc_file['DEPTH'],
-            x=nc_file['TIME'],
-            transpose=True,
-            line_width=0,
-            # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
-            zmax=0.5,
-            zmin=-0.5,
-            ncontours=40,
-            ),
-        )
-    fig['layout']['yaxis']['autorange'] = "reversed"
-    fig2.add_trace(
-        go.Contour(
-            z=nc_file['UCUR'],
-            y=nc_file['DEPTH'],
-            x=nc_file['TIME'],
-            transpose=True,
-            line_width=0,
-            # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
-            zmax=0.5,
-            zmin=-0.5,
-            ncontours=40,
+    )
+    if fig2 is not None:
+        fig2.update_xaxes(title_text='Time')
+        fig2.update_yaxes(title_text='Depth')
+        fig2.add_trace(
+            go.Contour(
+                z=nc_file[variable_2],
+                y=nc_file['DEPTH'],
+                x=nc_file['TIME'],
+                transpose=True,
+                line_width=0,
+                # colorscale = ([0, 'rgb(0,0,255)'], [1, 'rgb(0,255,0)']),
+                zmax=zmax,
+                zmin=zmin,
+                ncontours=ncontours,
             ),
             # row=2, col=1
         )
-    fig2['layout']['yaxis']['autorange'] = "reversed"
-    fig.update_layout(height=300,
-                      width=1000,
-                      # title=f"Daily Cross-Shore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from N)"
-                      title=f"Daily North-South velocity at (hardcoded TAN100)",
-                      margin=dict(t=50)
-                      )
-    fig2.update_layout(height=300,
-                       width=1000,
-                       # title=f"Daily Alongshore velocity at {map_selection} ({rotated_degs}{DEGREES_SYMBOL} CW from E)"
-                       title=f"Daily East-West velocity at (hardcoded TAN100)",
-                       margin=dict(t=50)
-                       )
-    return \
-        html.Br(), \
-            html.Div(
-                dbc.Row([html.H3(f'Gridded Daily Velocities at {map_selection} *hardcoded TAN100*',
-                    style={
-                        "color": "DarkSlateGrey",
-                        "display": "inline-block",
-                        "width": "40%",
-                        "margin-left": "20px",
-                        "verticalAlign": "top"}),
-                 vel_more_info_modal],
-                justify="left", align="start")), \
-        dcc.Graph(id='local_vel_tab', figure=fig,
-                  # title=f"Daily Cross-Shelf velocity at {map_selection} (Theta deg CW from E)"
-                  ), \
-        dcc.Graph(id='local_vel_tab', figure=fig2,
-                  # title=f"Daily Alongshore velocity at {map_selection} (Theta deg CW from E)"
-                  ),
+        fig2['layout']['yaxis']['autorange'] = "reversed"
 
-
-
-
-# print("Always executed")
-
-# if __name__ == '__main__':
-#     app.run_server(debug=False)
-
-# if __name__ == '__main__':
-#     app.run_server(host='0.0.0.0', port=8080, debug=False, use_reloader=False)
+        fig2.update_layout(
+            height=300,
+            width=1000,
+            margin=dict(t=50)
+        )

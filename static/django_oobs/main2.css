@@ -232,3 +232,9 @@ adaptive_size {
 }
 
 
+.contour_rangeslider{
+    background-color: --background_colour;
+    border-color: red;
+    border: solid 2px red;
+}
+
