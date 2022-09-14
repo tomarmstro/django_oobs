@@ -384,21 +384,16 @@ def toggle_temp_more_info_modal(n_open, n_close, is_open):
     return is_open
 
 contour_rangeslider = html.Div(
-            # className="contour_rangeslider",
-            # children=
             [
-            html.H5("Adjust z-axis bounds"),
+            html.H4("Adjust colour range"),
             dcc.RangeSlider(min=-1, max=1, step=0.01, value=[-0.25, 0.25], id='slider', allowCross=False,
+                            marks={
+                                -1: {'label': -1},
+                                1: {'label': 1}},
                             tooltip={
                                 "placement": "bottom",
-                                # "always_visible": True
                             },
-                            # style={
-                            #     "background-color": IMOS_DEEP_BLUE_COLOUR
-                            # }
                             ),
-
-            # html.Div(id='slider-output')
             ])
 
 @app.callback(
@@ -406,6 +401,55 @@ contour_rangeslider = html.Div(
     [Input('slider', 'value')])
 def update_output(value):
     return value
+
+dates_rangeslider = html.Div(
+            [
+            html.H4("Adjust date range"),
+            dcc.RangeSlider(min=2005, max=2022, step=1, value=[2015, 2016], id='date_slider', allowCross=False,
+                            marks={
+                                2005: {'label': 2005},
+                                2022: {'label': 2022}},
+                            tooltip={
+                                "placement": "bottom",
+                                # "always_visible": True
+                            },
+                            ),
+                html.Div(id='date-slider-output')
+            ])
+
+@app.callback(
+    Output('date-slider-output', 'children'),
+    [Input('date_slider', 'date_value')])
+def update_date(date_value):
+    return date_value
+
+def download_button(map_selection, variable):
+    if map_selection not in MOORINGS:
+        map_selection = 'TAN100'
+    thredds_path = "http://thredds.aodn.org.au//thredds/fileServer/IMOS/ANMN/"
+    LTSP_filename = (getLTSPname.getLTSPfileName(map_selection, variable))
+    downloadable_file = (LTSP_filename.split("IMOS/ANMN/", 1)[1])
+    download_href = thredds_path + downloadable_file
+    print(download_href)
+    download_button = html.Div(
+        [dbc.Row(
+            dbc.Button(
+                "Download",
+                href=download_href,
+                download=downloadable_file,
+                external_link=True,
+                color="primary", size="lg"), justify="center", align="center"),
+        ],
+    )
+
+
+    return download_button
+
+
+
+
+
+
 
 # Layout
 app.layout = html.Div(
@@ -421,7 +465,6 @@ app.layout = html.Div(
         html.Div(id='tab_content',
                  className="p-4"
             ),
-
         ],
     style={
         'width': '100%',
@@ -459,7 +502,7 @@ def render_tab_content(active_tab, clickData):
     print(f"{active_tab} selected.")
 
     if active_tab == 'vel_tab':
-        return vel_tabs, html.Div(id='vel_tab_content'), contour_rangeslider
+        return vel_tabs, html.Div(id='vel_tab_content'), contour_rangeslider, dates_rangeslider, download_button(map_selection, "velocity-hourly"),
 
     if active_tab == 'temp_tab':
         return temp_tabs, html.Div(id='temp_tab_content')
@@ -469,11 +512,12 @@ def render_tab_content(active_tab, clickData):
 @app.callback(Output(component_id="vel_tab_content", component_property="children"),
               [Input(component_id="vel_tabs", component_property="active_tab"),
                Input(component_id="moorings_map", component_property="clickData"),
-                Input(component_id='slider', component_property='value')]
-               # Input(component_id="slider", component_property="slider_value")
+               Input(component_id='slider', component_property='value'),
+               Input(component_id='date_slider', component_property='value')]
                )
-def sub_velocity_tabs(vel_tabs, clickData, value):
+def sub_velocity_tabs(vel_tabs, clickData, value, date_slider):
     print("slider value is: ", value)
+    print("date value is: ", date_slider)
     fig = go.Figure()
     fig_layout(fig)
     fig2 = go.Figure()
@@ -484,9 +528,9 @@ def sub_velocity_tabs(vel_tabs, clickData, value):
         print(f"{map_selection} selected from the map.")
     print(f"{vel_tabs} selected.")
     if vel_tabs == "cross_alongshore_tab":
-        return cross_along_velocity_tab_content(map_selection, fig, fig2, value)
+        return cross_along_velocity_tab_content(map_selection, fig, fig2, value, date_slider)
     elif vel_tabs == "ne_tab":
-        return north_east_velocity_tab_content(map_selection, fig, fig2, value)
+        return north_east_velocity_tab_content(map_selection, fig, fig2, value, date_slider)
     # return html.P("This shouldn't ever be displayed...")
 
 
@@ -517,12 +561,13 @@ def sub_temperature_tabs(temp_tabs, clickData):
     return html.P("This shouldn't ever be displayed...")
 
 
-def cross_along_velocity_tab_content(map_selection, fig, fig2, value):
-    print("zmax: ", value[1])
-    print("zmin: ", value[0])
-    render_plots(map_selection=map_selection, time='2015', zmax=value[1], zmin=value[0], ncontours=40,
+def cross_along_velocity_tab_content(map_selection, fig, fig2, value, date_slider):
+    # print("zmax: ", value[1])
+    # print("zmin: ", value[0])
+    render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40,
                  directory='VV', file_prefix='_VV_daily.nc', fig=fig, variable='UU', fig2=fig2, variable_2='VV')
-
+    print(date_slider)
+    # print(int(nc_file['TIME'].dt.year.max()))
     return \
         html.Br(), \
         html.Div(
@@ -536,14 +581,14 @@ def cross_along_velocity_tab_content(map_selection, fig, fig2, value):
             vel_more_info_modal],
             justify="left", align="start")), \
         dcc.Graph(
-            id='local_vel_tab', figure=fig,
-            ), \
-        dcc.Graph(
             id='local_vel_tab', figure=fig2,
-            ),
+        ), \
+        dcc.Graph(
+            id='local_vel_tab', figure=fig,
+            )
 
-def north_east_velocity_tab_content(map_selection, fig, fig2, value):
-    render_plots(map_selection=map_selection, time='2015', zmax=value[1], zmin=value[0], ncontours=40, directory='VV', file_prefix='_VV_daily.nc', fig=fig,
+def north_east_velocity_tab_content(map_selection, fig, fig2, value, date_slider):
+    render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40, directory='VV', file_prefix='_VV_daily.nc', fig=fig,
                  variable='UCUR', fig2=fig2, variable_2='VCUR')
     return \
         html.Br(), \
@@ -565,23 +610,30 @@ def north_east_velocity_tab_content(map_selection, fig, fig2, value):
 def climatology(map_selection, fig):
     while True:
         try:
-            nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/CLIM").resolve()
-            if map_selection not in MOORINGS:
-                map_selection = 'TAN100'
-            # for file in os.listdir(nc_files):
-            nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_CLIM.nc'))
-            fig.add_trace(go.Contour(z=nc_file['CLIM'],
-                                     x=nc_file['CLIM']['TIME'],
-                                     transpose=True,
-                                     line_width=0,
-                                     zmax=35,
-                                     zmin=10,
-                                     ncontours=40,
-                                     ))
-            fig['layout']['yaxis']['autorange'] = "reversed"
+            render_plots(map_selection=map_selection, time='2015', zmax=35, zmin=10, ncontours=40,
+                         directory='CLIM', file_prefix='_TEMP_daily.nc', fig=fig,
+                         variable='CLIM', fig2=None, variable_2=None)
             fig.update_xaxes(title_text='Time',
-                             tickformat="%B") #set x axis labels to month only
-            fig.update_yaxes(title_text='Depth')
+                             tickformat="%B")
+            fig.update_layout(
+                height=450)
+            # set x axis labels to month only
+            # nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/CLIM").resolve()
+            # if map_selection not in MOORINGS:
+            #     map_selection = 'TAN100'
+            # # for file in os.listdir(nc_files):
+            # nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_CLIM.nc'))
+            # fig.add_trace(go.Contour(z=nc_file['CLIM'],
+            #                          x=nc_file['CLIM']['TIME'],
+            #                          transpose=True,
+            #                          line_width=0,
+            #                          zmax=35,
+            #                          zmin=10,
+            #                          ncontours=40,
+            #                          ))
+            # fig['layout']['yaxis']['autorange'] = "reversed"
+
+            # fig.update_yaxes(title_text='Depth')
             return html.Br(),\
                 html.Div(
                     dbc.Row([html.H3(f'Climatology at {map_selection}',
@@ -601,6 +653,8 @@ def gridded_temperature(map_selection, fig):
     render_plots(map_selection=map_selection, time='2015', zmax=35, zmin=10, ncontours=40,
                  directory='CLIM', file_prefix='_TEMP_daily.nc', fig=fig, variable='TEMP', fig2=None,
                  variable_2=None)
+    fig.update_layout(
+        height=450)
     return \
         html.Br(),\
         html.Div(
@@ -622,6 +676,10 @@ def anomaly(map_selection, fig):
     render_plots(map_selection=map_selection, time='2015', zmax=2.5, zmin=-2.5, ncontours=20,
                  directory='CLIM', file_prefix='_TEMP_daily.nc', fig=fig, variable='CLIM', fig2=None,
                 variable_2='TEMP')
+    fig.update_xaxes(title_text='Time',
+                     tickformat="%B")
+    fig.update_layout(
+        height=450)
     return html.Br(),\
         html.Div(dbc.Row([html.H3(f'Temperature anomalies at {map_selection}',
             style={"color": "DarkSlateGrey",
@@ -633,30 +691,28 @@ def anomaly(map_selection, fig):
             justify="left", align="start")), dcc.Graph(id='anomaly_tab', figure=fig)
 
 
-def render_plots(map_selection, time, zmax, zmin, ncontours, directory, file_prefix, fig,  variable, fig2=None, variable_2=None):
+def render_plots(map_selection, start_time, end_time, zmax, zmin, ncontours, directory, file_prefix, fig,  variable, fig2=None, variable_2=None):
     nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/" + directory).resolve()
     if map_selection not in MOORINGS:
         map_selection = 'TAN100'
     nc_file = xr.open_dataset(nc_files.joinpath(map_selection + file_prefix))
     try:
-        nc_file = nc_file.sel(TIME=time)
+        nc_file = nc_file.sel(TIME=slice(start_time, end_time))
     except KeyError:
         print(f"There is no 2015 data at {map_selection}")
         pass
     z = nc_file[variable]
-    if variable == 'CLIM':
+    print("maximum time is: ", nc_file['TIME'].dt.year.max())
+    print(int(nc_file['TIME'].dt.year.max()))
+    if variable == 'CLIM' and variable_2 == 'TEMP':
         z = nc_file[variable] - nc_file[variable_2]
     elif variable == 'UU':
         rotated_degs = nc_file[directory].attrs['reference_datum degrees']
-        fig.update_layout(title=f"Daily Cross-Shore Velocity at ({rotated_degs}{DEGREES_SYMBOL} CW from N)")
-        fig2.update_layout(title=f"Daily Along-Shore Velocity at ({rotated_degs}{DEGREES_SYMBOL} CW from N)")
+        fig.update_layout(title=f"Daily Cross-Shore Velocity at ({round(rotated_degs)}{DEGREES_SYMBOL} CW from N)")
+        fig2.update_layout(title=f"Daily Along-Shore Velocity at ({round(rotated_degs)}{DEGREES_SYMBOL} CW from N)")
     elif variable =='UCUR':
         fig.update_layout(title=f"Daily North-South Velocity")
         fig2.update_layout(title=f"Daily East-West Velocity")
-
-    fig.update_xaxes(title_text='Time')
-    fig.update_yaxes(title_text='Depth')
-
     fig.add_trace(
         go.Contour(
             z=z,
@@ -668,6 +724,7 @@ def render_plots(map_selection, time, zmax, zmin, ncontours, directory, file_pre
             zmax=zmax,
             zmin=zmin,
             ncontours=ncontours,
+            y0=0
         ),
         # row=1, col=1
     )
@@ -675,8 +732,10 @@ def render_plots(map_selection, time, zmax, zmin, ncontours, directory, file_pre
     fig.update_layout(
         height=300,
         width=1000,
-        margin=dict(t=50)
+        margin=dict(t=50),
     )
+    fig.update_xaxes(title_text='Time')
+    fig.update_yaxes(title_text='Depth')
     if fig2 is not None:
         fig2.update_xaxes(title_text='Time')
         fig2.update_yaxes(title_text='Depth')
