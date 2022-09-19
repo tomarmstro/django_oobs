@@ -28,5 +28,3 @@ def home(request):
 def data(request):
     return render(request, 'django_oobs/data.html', {'title': 'data'})
 
-def todo(request):
-    return render(request, 'django_oobs/todo.html', {'title': 'todo'})

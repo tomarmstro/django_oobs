@@ -519,45 +519,53 @@ def sub_temperature_tabs(temp_tabs, clickData, value, date_slider):
     return html.P("This shouldn't ever be displayed...")
 
 def cross_along_velocity_tab_content(map_selection, fig, fig2, value, date_slider, vel_tabs):
-    render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40,
-                 directory='VV', file_prefix='_VV_daily.nc', fig=fig, variable='UU', fig2=fig2, variable_2='VV', vel_tabs=vel_tabs)
-    return \
-        html.Br(), \
-        html.Div(
-            dbc.Row([html.H3(f'Gridded Daily Velocities at {map_selection}',
-            style={"color": "DarkSlateGrey",
-                "display": "inline-block",
-                "width": "40%",
-                "margin-left": "20px",
-                "verticalAlign": "top",
-                'backgroundColor': BODY_BACKGROUND_COLOUR}),
-            vel_more_info_modal],
-            justify="left", align="start")), \
-        dcc.Graph(
-            id='local_vel_tab', figure=fig2,
-        ), \
-        dcc.Graph(
-            id='local_vel_tab', figure=fig,
-            )
-
-def north_east_velocity_tab_content(map_selection, fig, fig2, value, date_slider, vel_tabs):
-    render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40, directory='VV', file_prefix='_VV_daily.nc', fig=fig,
-                 variable='UCUR', fig2=fig2, variable_2='VCUR', vel_tabs=vel_tabs)
-    return \
-        html.Br(), \
-            html.Div(
-                dbc.Row([html.H3(f'Gridded Daily Velocities at {map_selection}',
-                    style={
-                        "color": "DarkSlateGrey",
+    while True:
+        try:
+            render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40,
+                         directory='VV', file_prefix='_VV_daily.nc', fig=fig, variable='UU', fig2=fig2, variable_2='VV', vel_tabs=vel_tabs)
+            return \
+                html.Br(), \
+                html.Div(
+                    dbc.Row([html.H3(f'Gridded Daily Velocities at {map_selection}',
+                    style={"color": "DarkSlateGrey",
                         "display": "inline-block",
                         "width": "40%",
                         "margin-left": "20px",
-                        "verticalAlign": "top"}),
-                 vel_more_info_modal],
-                justify="left", align="start")), \
-                dcc.Graph(id='local_vel_tab', figure=fig2,
-                  ), \
-                dcc.Graph(id='local_vel_tab', figure=fig)
+                        "verticalAlign": "top",
+                        'backgroundColor': BODY_BACKGROUND_COLOUR}),
+                    vel_more_info_modal],
+                    justify="left", align="start")), \
+                dcc.Graph(
+                    id='local_vel_tab', figure=fig2,
+                ), \
+                dcc.Graph(
+                    id='local_vel_tab', figure=fig,
+                    )
+        except FileNotFoundError:
+            return html.Br(), html.H1("Error: File not found.")
+
+def north_east_velocity_tab_content(map_selection, fig, fig2, value, date_slider, vel_tabs):
+    while True:
+        try:
+            render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40, directory='VV', file_prefix='_VV_daily.nc', fig=fig,
+                         variable='UCUR', fig2=fig2, variable_2='VCUR', vel_tabs=vel_tabs)
+            return \
+                html.Br(), \
+                    html.Div(
+                        dbc.Row([html.H3(f'Gridded Daily Velocities at {map_selection}',
+                            style={
+                                "color": "DarkSlateGrey",
+                                "display": "inline-block",
+                                "width": "40%",
+                                "margin-left": "20px",
+                                "verticalAlign": "top"}),
+                         vel_more_info_modal],
+                        justify="left", align="start")), \
+                        dcc.Graph(id='local_vel_tab', figure=fig2,
+                          ), \
+                        dcc.Graph(id='local_vel_tab', figure=fig)
+        except FileNotFoundError:
+            return html.Br(), html.H1("Error: File not found.")
 
 def climatology(map_selection, fig, value, date_slider, temp_tabs):
     while True:
@@ -584,50 +592,59 @@ def climatology(map_selection, fig, value, date_slider, temp_tabs):
             return html.Br(), html.H1("Error: File not found.")
 
 def gridded_temperature(map_selection, fig, value, date_slider, temp_tabs):
-    render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40,
-                 directory='CLIM', file_prefix='_TEMP_daily.nc', fig=fig, variable='TEMP', fig2=None,
-                 variable_2=None, temp_tabs=temp_tabs)
-    fig.update_layout(
-        height=450)
-    return \
-        html.Br(),\
-        html.Div(
-            dbc.Row(
-                [html.H3(f'Gridded temperature at {map_selection}',
+    while True:
+        try:
+            render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40,
+                         directory='CLIM', file_prefix='_TEMP_daily.nc', fig=fig, variable='TEMP', fig2=None,
+                         variable_2=None, temp_tabs=temp_tabs)
+            fig.update_layout(
+                height=450)
+            return \
+                html.Br(),\
+                html.Div(
+                    dbc.Row(
+                        [html.H3(f'Gridded temperature at {map_selection}',
+                            style={"color": "DarkSlateGrey",
+                                "display": "inline-block",
+                                "width": "40%",
+                                "margin-left": "20px",
+                                "verticalAlign": "top"}
+                            ),
+                        temp_more_info_modal,
+                        ],
+                        justify="left", align="start")
+                    ), \
+                dcc.Graph(id='gridded_temp_tab', figure=fig)
+        except FileNotFoundError:
+            return html.Br(), html.H1("Error: File not found.")
+
+def anomaly(map_selection, fig, value, date_slider, temp_tabs):
+    while True:
+        try:
+            render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=2.5, zmin=-2.5, ncontours=20,
+                         directory='CLIM', file_prefix='_TEMP_daily.nc', fig=fig, variable='CLIM', fig2=None, variable_2='TEMP', temp_tabs=temp_tabs)
+            fig.update_xaxes(title_text='Time',
+                             # tickformat="%B"
+                             )
+            fig.update_layout(
+                height=450)
+            return html.Br(),\
+                html.Div(dbc.Row([html.H3(f'Temperature anomalies at {map_selection}',
                     style={"color": "DarkSlateGrey",
                         "display": "inline-block",
                         "width": "40%",
                         "margin-left": "20px",
-                        "verticalAlign": "top"}
-                    ),
-                temp_more_info_modal,
-                ],
-                justify="left", align="start")
-            ), \
-        dcc.Graph(id='gridded_temp_tab', figure=fig)
-
-def anomaly(map_selection, fig, value, date_slider, temp_tabs):
-    render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=2.5, zmin=-2.5, ncontours=20,
-                 directory='CLIM', file_prefix='_TEMP_daily.nc', fig=fig, variable='CLIM', fig2=None, variable_2='TEMP', temp_tabs=temp_tabs)
-    fig.update_xaxes(title_text='Time',
-                     # tickformat="%B"
-                     )
-    fig.update_layout(
-        height=450)
-    return html.Br(),\
-        html.Div(dbc.Row([html.H3(f'Temperature anomalies at {map_selection}',
-            style={"color": "DarkSlateGrey",
-                "display": "inline-block",
-                "width": "40%",
-                "margin-left": "20px",
-                "verticalAlign": "top"}),
-            temp_more_info_modal],
-            justify="left", align="start")), dcc.Graph(id='anomaly_tab', figure=fig)
+                        "verticalAlign": "top"}),
+                    temp_more_info_modal],
+                    justify="left", align="start")), dcc.Graph(id='anomaly_tab', figure=fig)
+        except FileNotFoundError:
+            return html.Br(), html.H1("Error: File not found.")
 
 def render_plots(map_selection, start_time, end_time, zmax, zmin, ncontours, directory, file_prefix, fig,  variable, fig2=None, variable_2=None, temp_tabs=None, vel_tabs=None):
     nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/" + directory).resolve()
-    if map_selection not in MOORINGS:
-        map_selection = 'TAN100'
+    # if map_selection not in MOORINGS:
+    #     print("TAN100 Selected by Default")
+    #     map_selection = 'TAN100'
     nc_file = xr.open_dataset(nc_files.joinpath(map_selection + file_prefix))
     if temp_tabs != "climatology_tab":
         nc_file = nc_file.sel(TIME=slice(start_time, end_time))
