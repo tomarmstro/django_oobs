@@ -89,24 +89,22 @@ def render_map():
         )]
 
 # Get files
-def collect_working_files(variable):
-    working_files = []
-    for mooring in MOORINGS:
-        if variable == 'velocity-hourly':
-            LTSP_filename = (getLTSPname.getLTSPfileName(mooring, variable))
-        elif variable == 'aggregated':
-            LTSP_filename = (getLTSPname.getLTSPfileName(mooring, variable))
-        else:
-            print('incorrect variable for collecting files')
-        print(LTSP_filename.split("timeseries/", 1)[1])
-        working_files.append(LTSP_filename)
-    return working_files
+# def collect_working_files(variable):
+#     working_files = []
+#     for mooring in MOORINGS:
+#         if variable == 'velocity-hourly':
+#             LTSP_filename = (getLTSPname.getLTSPfileName(mooring, variable))
+#         elif variable == 'aggregated':
+#             LTSP_filename = (getLTSPname.getLTSPfileName(mooring, variable))
+#         else:
+#             print('incorrect variable for collecting files')
+#         print(LTSP_filename.split("timeseries/", 1)[1])
+#         working_files.append(LTSP_filename)
+#     return working_files
 
 def build_tabs():
     return dbc.Tabs(
         [
-            # dbc.Tab(render_map(),
-            #         label='map_select', tab_id='map_tab', ),
             dbc.Tab(label='Velocity',
                     tab_id='vel_tab',
                     tabClassName="flex-grow-1 text-center",
@@ -127,29 +125,6 @@ def build_tabs():
                         label_style={
                             'border-color': IMOS_DEEP_BLUE_COLOUR,
                         }),
-            # dbc.Tab(label='NE Velocity',
-            #         tab_id='vcur_tab',
-            #         tabClassName="flex-grow-1 text-center",
-            #         active_label_style={
-            #             "backgroundColor": IMOS_DEEP_BLUE_COLOUR,
-            #             "color": "white"
-            #         },
-            #             label_style={
-            #                 'border-color': IMOS_DEEP_BLUE_COLOUR,
-            #             }),
-            # dbc.Tab(label='Daily Temperature',
-            #         tab_id='daily_temp_tab',
-            #         tabClassName="flex-grow-1 text-center",
-            #         active_label_style={
-            #             "backgroundColor": IMOS_DEEP_BLUE_COLOUR,
-            #             "color": "white"
-            #         },
-            #         label_style={
-            #             'border-color': IMOS_DEEP_BLUE_COLOUR,
-            #         }),
-            # dbc.Tab(label='Climatology', tab_id='climatology_tab', tabClassName="flex-grow-1 text-center"),
-            # dbc.Tab(label='Gridded Temperature', tab_id='gridded_temp_tab', tabClassName="flex-grow-1 text-center"),
-
         ],
         id='tabs',
         active_tab="vel_tab",
@@ -167,24 +142,6 @@ def fig_layout(fig):
         # font_color = IMOS_SAND_COLOUR,
         margin=dict(t=50)
     )
-
-# def colourscale_rangeslider():
-#     return html.Div(
-#         html.Div(
-#             [
-#                 dcc.Input(type='text', value=0),
-#                 dcc.RangeSlider(
-#                     id='condition-range-slider',
-#                     min=0,
-#                     max=30,
-#                     value=[10, 15],
-#                     allowCross=False
-#                 ),
-#                 dcc.Input(type='text', value=100)
-#             ],
-#             style={"display": "grid", "grid-template-columns": "10% 40% 10%"}),
-#         style={'width': '20%'}
-#     )
 
 vel_tabs = html.Div(
     [dbc.Tabs(
@@ -338,7 +295,6 @@ def toggle_vel_more_info_modal(n_open, n_close, is_open):
         return not is_open
     return is_open
 
-
 temp_more_info_modal = html.Div(
     [
         dbc.Button("Info",
@@ -464,15 +420,7 @@ def download_button(map_selection, variable):
                 color="primary", size="lg"), justify="center", align="center"),
         ],
     )
-
-
     return download_button
-
-
-
-
-
-
 
 # Layout
 app.layout = html.Div(
@@ -502,13 +450,6 @@ app.layout = html.Div(
         }
     )
 
-
-# my_slider = html.Div([
-#     dcc.RangeSlider(0, 20, 1, value=[5, 15], id='slider'),
-#     html.Div(id='slider_value')
-# ])
-# ---------------------------------------------------------------
-# Get tab content
 @app.callback(
     Output(component_id='tab_content', component_property='children'),
     [Input(component_id='tabs', component_property='active_tab'),
@@ -523,14 +464,10 @@ def render_tab_content(active_tab, clickData):
         map_selection = clickData['points'][0]['hovertext']
         print(f"{map_selection} selected from the map.")
     print(f"{active_tab} selected.")
-
     if active_tab == 'vel_tab':
         return vel_tabs, html.Div(id='vel_tab_content'), contour_rangeslider, dates_rangeslider, download_button(map_selection, "velocity-hourly"),
-
     if active_tab == 'temp_tab':
         return temp_tabs, html.Div(id='temp_tab_content'), temp_contour_rangeslider, dates_rangeslider
-        # return temperature(map_selection, fig)
-
 
 @app.callback(Output(component_id="vel_tab_content", component_property="children"),
               [Input(component_id="vel_tabs", component_property="active_tab"),
@@ -572,10 +509,6 @@ def sub_temperature_tabs(temp_tabs, clickData, value, date_slider):
         map_selection = clickData['points'][0]['hovertext']
         print(f"{map_selection} selected from the map.")
     print(f"{temp_tabs} selected.")
-
-    data_dir = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data").resolve()
-    # map_selection = 'NRSYON'
-    tab1_content = html.H3('working')
     if temp_tabs == "climatology_tab":
         return climatology(map_selection, fig, value, date_slider, temp_tabs)
     elif temp_tabs == "gridded_temp_tab":
@@ -585,14 +518,9 @@ def sub_temperature_tabs(temp_tabs, clickData, value, date_slider):
         return anomaly(map_selection, fig, value, date_slider, temp_tabs)
     return html.P("This shouldn't ever be displayed...")
 
-
 def cross_along_velocity_tab_content(map_selection, fig, fig2, value, date_slider, vel_tabs):
-    # print("zmax: ", value[1])
-    # print("zmin: ", value[0])
     render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40,
                  directory='VV', file_prefix='_VV_daily.nc', fig=fig, variable='UU', fig2=fig2, variable_2='VV', vel_tabs=vel_tabs)
-    print(date_slider)
-    # print(int(nc_file['TIME'].dt.year.max()))
     return \
         html.Br(), \
         html.Div(
@@ -641,23 +569,6 @@ def climatology(map_selection, fig, value, date_slider, temp_tabs):
                              tickformat="%B")
             fig.update_layout(
                 height=450)
-            # set x axis labels to month only
-            # nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/CLIM").resolve()
-            # if map_selection not in MOORINGS:
-            #     map_selection = 'TAN100'
-            # # for file in os.listdir(nc_files):
-            # nc_file = xr.open_dataset(nc_files.joinpath(map_selection + '_CLIM.nc'))
-            # fig.add_trace(go.Contour(z=nc_file['CLIM'],
-            #                          x=nc_file['CLIM']['TIME'],
-            #                          transpose=True,
-            #                          line_width=0,
-            #                          zmax=35,
-            #                          zmin=10,
-            #                          ncontours=40,
-            #                          ))
-            # fig['layout']['yaxis']['autorange'] = "reversed"
-
-            # fig.update_yaxes(title_text='Depth')
             return html.Br(),\
                 html.Div(
                     dbc.Row([html.H3(f'Climatology at {map_selection}',
@@ -669,7 +580,6 @@ def climatology(map_selection, fig, value, date_slider, temp_tabs):
                     temp_more_info_modal],
                     justify="left", align="start")), \
                     dcc.Graph(id='climatology_tab', figure=fig)
-
         except FileNotFoundError:
             return html.Br(), html.H1("Error: File not found.")
 
@@ -714,16 +624,11 @@ def anomaly(map_selection, fig, value, date_slider, temp_tabs):
             temp_more_info_modal],
             justify="left", align="start")), dcc.Graph(id='anomaly_tab', figure=fig)
 
-
 def render_plots(map_selection, start_time, end_time, zmax, zmin, ncontours, directory, file_prefix, fig,  variable, fig2=None, variable_2=None, temp_tabs=None, vel_tabs=None):
     nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/" + directory).resolve()
     if map_selection not in MOORINGS:
         map_selection = 'TAN100'
     nc_file = xr.open_dataset(nc_files.joinpath(map_selection + file_prefix))
-
-
-    # print("maximum time is: ", nc_file['TIME'].dt.year.max())
-    # print(int(nc_file['TIME'].dt.year.max()))
     if temp_tabs != "climatology_tab":
         nc_file = nc_file.sel(TIME=slice(start_time, end_time))
 
@@ -736,26 +641,14 @@ def render_plots(map_selection, start_time, end_time, zmax, zmin, ncontours, dir
         nc_file = nc_file.sel(TIME=slice(start_time, end_time))
         fig.update_layout(title=f"Daily North-South Velocity")
         fig2.update_layout(title=f"Daily East-West Velocity")
-
     z1 = nc_file[variable]
     if variable_2 is not None:
         z2 = nc_file[variable_2]
         if temp_tabs == "anomaly_tab":
             z1 = nc_file[variable] - nc_file[variable_2]
-
-
-
-    # while True:
-    #     try:
-    #         nc_file = nc_file.sel(TIME=start_time)
-    #     except KeyError:
-    #         print(f"There is no 2015 data at {map_selection}")
-    #         pass
-
     fig.add_trace(
         go.Contour(
             z=z1,
-            # z=nc_file[variable_2],
             y=nc_file['DEPTH'],
             x=nc_file['TIME'],
             transpose=True,
@@ -794,7 +687,6 @@ def render_plots(map_selection, start_time, end_time, zmax, zmin, ncontours, dir
             # row=2, col=1
         )
         fig2['layout']['yaxis']['autorange'] = "reversed"
-
         fig2.update_layout(
             height=300,
             width=1000,
