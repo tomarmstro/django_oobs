@@ -24,14 +24,16 @@ pio.templates.default = "simple_white"
 px.defaults.color_continuous_scale = px.colors.sequential.Blackbody
 
 DATA_SKIP = 500
+
+#Colours
 TRANSPARENT_COLOUR = "rgba(0, 0, 0, 0)"
 IMOS_DEEP_BLUE_COLOUR = "#3b6e8f"
 IMOS_SEA_BLUE_COLOUR = "#54bceb"
 IMOS_SAND_COLOUR = "#d9d7bd"
 IMOS_MID_GREY_COLOUR = "#3c3c3c"
-
 BODY_BACKGROUND_COLOUR = IMOS_SAND_COLOUR
 BODY_BORDER_COLOUR = IMOS_MID_GREY_COLOUR
+map_colours = ['#11c216', '#808080']
 
 DEGREES_SYMBOL = u'\xb0'
 
@@ -40,6 +42,7 @@ PATH = pathlib.Path(__file__).parent
 pd.set_option('display.max_rows', None)
 app = DjangoDash('data', external_stylesheets=external_stylesheets)
 
+#Site names
 GBR = ['GBRLSL', 'GBRLSH', 'GBRMYR', 'GBRPPS', 'GBRHIS', 'GBROTE', 'GBRCCH', 'GBRELR', 'GBRHIN']
 NWS = ['NWSROW', 'NWSLYN', 'NWSBAR', 'NWSBRW', 'TAN100']
 NRS = ['NRSYON', 'NRSDAR', 'NRSKAI', 'NRSMAI', 'NRSNIN', 'NRSROT', 'NRSNSI']
@@ -51,7 +54,7 @@ MOORINGS = GBR + NWS + NRS + ITF + KIM + CAM + PIL
 # MOORINGS = ['GBRLSL', 'GBRLSH', 'GBRMYR', 'GBRPPS', 'GBRHIS', 'GBROTE', 'GBRCCH', 'GBRELR', 'GBRHIN', 'NWSROW', 'NWSLYN', 'NWSBAR', 'NWSBRW', 'TAN100', 'NRSYON', 'NRSDAR']
 map_selection = "TAN100"
 active_tab = 'vcur_tab'
-map_colours = ['#11c216', '#808080']
+
 
 # Create map
 def render_map():
@@ -102,6 +105,7 @@ def render_map():
 #         working_files.append(LTSP_filename)
 #     return working_files
 
+#Build main tabs (Velocity and Temperature)
 def build_tabs():
     return dbc.Tabs(
         [
@@ -132,6 +136,7 @@ def build_tabs():
         className="custom-tabs"
     )
 
+# Basic figure layout
 def fig_layout(fig):
     fig.update_layout(
         plot_bgcolor=BODY_BACKGROUND_COLOUR,
@@ -143,6 +148,7 @@ def fig_layout(fig):
         margin=dict(t=50)
     )
 
+#Build Velocity Tabs
 vel_tabs = html.Div(
     [dbc.Tabs(
         [
@@ -176,6 +182,7 @@ vel_tabs = html.Div(
         className="custom-tabs",
     )])
 
+#Build Temperature Tabs
 temp_tabs = html.Div(
     [
         dbc.Tabs(
@@ -218,6 +225,7 @@ temp_tabs = html.Div(
     ]
 )
 
+#Build map popup/modal
 map_modal_style = ({"backgroundColor": IMOS_DEEP_BLUE_COLOUR, 'color': 'white'})
 map_modal = html.Div(
     [
@@ -239,6 +247,7 @@ map_modal = html.Div(
     ]
 )
 
+# Callback and toggle for map modal
 @app.callback(
     Output(component_id="map_modal", component_property="is_open"),
     [Input(component_id="open-map-modal", component_property="n_clicks"),
@@ -250,6 +259,7 @@ def toggle_modal(n_open, n_close, is_open):
         return not is_open
     return is_open
 
+#Velocity tabs more info button and popup/modal
 info_modal_style = ({"backgroundColor": IMOS_DEEP_BLUE_COLOUR, 'color': 'white'})
 vel_more_info_modal = html.Div(
     [
@@ -284,6 +294,7 @@ vel_more_info_modal = html.Div(
     ]
 )
 
+#Velocity tabs more info popup callback
 @app.callback(
     Output(component_id="vel_more_info_modal", component_property="is_open"),
     [Input(component_id="open-vel-more-info-modal", component_property="n_clicks"),
@@ -295,6 +306,7 @@ def toggle_vel_more_info_modal(n_open, n_close, is_open):
         return not is_open
     return is_open
 
+#Temperature more info modal/popup
 temp_more_info_modal = html.Div(
     [
         dbc.Button("Info",
@@ -328,6 +340,7 @@ temp_more_info_modal = html.Div(
     ]
 )
 
+#Temperature more info callback
 @app.callback(
     Output(component_id="temp_more_info_modal", component_property="is_open"),
     [Input(component_id="open-temp-more-info-modal", component_property="n_clicks"),
@@ -339,6 +352,7 @@ def toggle_temp_more_info_modal(n_open, n_close, is_open):
         return not is_open
     return is_open
 
+#Velocity Colour rangeslider to change contour plot colour range (z-axis)
 contour_rangeslider = html.Div(
     [
     html.H4("Adjust colour range"),
@@ -354,12 +368,14 @@ contour_rangeslider = html.Div(
         ),
     ])
 
+#Velocity colour rangeslider callback
 @app.callback(
     Output('slider-output', 'children'),
     [Input('slider', 'value')])
 def update_output(value):
     return value
 
+#Temperature Colour rangeslider to change contour plot colour range (z-axis)
 temp_contour_rangeslider = html.Div(
     [
     html.H4("Adjust colour range"),
@@ -375,12 +391,14 @@ temp_contour_rangeslider = html.Div(
         ),
     ])
 
+#Temperature colour rangeslider callback
 @app.callback(
     Output('temp-slider-output', 'children'),
     [Input('temp_slider', 'value')])
 def update_output(value):
     return value
 
+#Dates slider for contour plots
 dates_rangeslider = html.Div(
             [
             html.H4("Adjust date range"),
@@ -396,12 +414,14 @@ dates_rangeslider = html.Div(
                 html.Div(id='date-slider-output')
             ])
 
+#Dates slider callback
 @app.callback(
     Output('date-slider-output', 'children'),
     [Input('date_slider', 'date_value')])
 def update_date(date_value):
     return date_value
 
+#Download button
 def download_button(map_selection, variable):
     if map_selection not in MOORINGS:
         map_selection = 'TAN100'
@@ -422,7 +442,7 @@ def download_button(map_selection, variable):
     )
     return download_button
 
-# Layout
+# Plotly/Dash Main App Layout
 app.layout = html.Div(
     # style={"backgroundColor": DARK_BLUE_COLOUR, 'display': 'inline-block', 'width': '100%'},
     id="container",
@@ -436,6 +456,7 @@ app.layout = html.Div(
         html.Div(id='tab_content',
                  className="p-4"
             ),
+        html.Br(),
         ],
     style={
         'width': '100%',
@@ -450,6 +471,7 @@ app.layout = html.Div(
         }
     )
 
+#Main tabs callback (Velocity/Temperature Tabs and Map Selection
 @app.callback(
     Output(component_id='tab_content', component_property='children'),
     [Input(component_id='tabs', component_property='active_tab'),
@@ -469,6 +491,7 @@ def render_tab_content(active_tab, clickData):
     if active_tab == 'temp_tab':
         return temp_tabs, html.Div(id='temp_tab_content'), temp_contour_rangeslider, dates_rangeslider
 
+#Velocity Tab Callback
 @app.callback(Output(component_id="vel_tab_content", component_property="children"),
               [Input(component_id="vel_tabs", component_property="active_tab"),
                Input(component_id="moorings_map", component_property="clickData"),
@@ -493,7 +516,7 @@ def sub_velocity_tabs(vel_tabs, clickData, value, date_slider):
         return north_east_velocity_tab_content(map_selection, fig, fig2, value, date_slider, vel_tabs)
     # return html.P("This shouldn't ever be displayed...")
 
-
+#Temperature Tab Callback
 @app.callback(Output(component_id="temp_tab_content", component_property="children"),
               [Input(component_id="temp_tabs", component_property="active_tab"),
                Input(component_id="moorings_map", component_property="clickData"),
@@ -512,12 +535,12 @@ def sub_temperature_tabs(temp_tabs, clickData, value, date_slider):
     if temp_tabs == "climatology_tab":
         return climatology(map_selection, fig, value, date_slider, temp_tabs)
     elif temp_tabs == "gridded_temp_tab":
-        return \
-            gridded_temperature(map_selection, fig, value, date_slider, temp_tabs)
+        return gridded_temperature(map_selection, fig, value, date_slider, temp_tabs)
     elif temp_tabs == "anomaly_tab":
         return anomaly(map_selection, fig, value, date_slider, temp_tabs)
     return html.P("This shouldn't ever be displayed...")
 
+#Cross/Alongshore Velocity Tab
 def cross_along_velocity_tab_content(map_selection, fig, fig2, value, date_slider, vel_tabs):
     while True:
         try:
@@ -544,6 +567,7 @@ def cross_along_velocity_tab_content(map_selection, fig, fig2, value, date_slide
         except FileNotFoundError:
             return html.Br(), html.H1("Error: File not found.")
 
+#North/East Velocity Tab
 def north_east_velocity_tab_content(map_selection, fig, fig2, value, date_slider, vel_tabs):
     while True:
         try:
@@ -567,6 +591,7 @@ def north_east_velocity_tab_content(map_selection, fig, fig2, value, date_slider
         except FileNotFoundError:
             return html.Br(), html.H1("Error: File not found.")
 
+#Climatology Tab
 def climatology(map_selection, fig, value, date_slider, temp_tabs):
     while True:
         try:
@@ -587,10 +612,11 @@ def climatology(map_selection, fig, value, date_slider, temp_tabs):
                             "verticalAlign": "top"}),
                     temp_more_info_modal],
                     justify="left", align="start")), \
-                    dcc.Graph(id='climatology_tab', figure=fig)
+                    dcc.Graph(id='climatology_tab', figure=fig),
         except FileNotFoundError:
             return html.Br(), html.H1("Error: File not found.")
 
+#Gridded Temperature Tab
 def gridded_temperature(map_selection, fig, value, date_slider, temp_tabs):
     while True:
         try:
@@ -618,6 +644,7 @@ def gridded_temperature(map_selection, fig, value, date_slider, temp_tabs):
         except FileNotFoundError:
             return html.Br(), html.H1("Error: File not found.")
 
+#Anomaly Tab
 def anomaly(map_selection, fig, value, date_slider, temp_tabs):
     while True:
         try:
@@ -640,6 +667,7 @@ def anomaly(map_selection, fig, value, date_slider, temp_tabs):
         except FileNotFoundError:
             return html.Br(), html.H1("Error: File not found.")
 
+#Build/Render Plots function - Built into each tab for plotting all contour plots
 def render_plots(map_selection, start_time, end_time, zmax, zmin, ncontours, directory, file_prefix, fig,  variable, fig2=None, variable_2=None, temp_tabs=None, vel_tabs=None):
     nc_files = PATH.joinpath(os.path.abspath(os.curdir) + "/assets/data/" + directory).resolve()
     # if map_selection not in MOORINGS:
@@ -662,7 +690,7 @@ def render_plots(map_selection, start_time, end_time, zmax, zmin, ncontours, dir
     if variable_2 is not None:
         z2 = nc_file[variable_2]
         if temp_tabs == "anomaly_tab":
-            z1 = nc_file[variable] - nc_file[variable_2]
+            z1 = nc_file[variable_2] - nc_file[variable]
     fig.add_trace(
         go.Contour(
             z=z1,
@@ -674,7 +702,7 @@ def render_plots(map_selection, start_time, end_time, zmax, zmin, ncontours, dir
             zmax=zmax,
             zmin=zmin,
             ncontours=ncontours,
-            y0=0
+            y0=0,
         ),
         # row=1, col=1
     )
@@ -683,9 +711,11 @@ def render_plots(map_selection, start_time, end_time, zmax, zmin, ncontours, dir
         height=300,
         width=1000,
         margin=dict(t=50),
+        # yaxis_range=(0, max(nc_file['DEPTH']))
     )
+    # fig.update(layout_yaxis_range=(0, max(nc_file['DEPTH'])))
     fig.update_xaxes(title_text='Time')
-    fig.update_yaxes(title_text='Depth')
+    fig.update_yaxes(title_text='Depth', range=[3, 9])
     if fig2 is not None:
         fig2.update_xaxes(title_text='Time')
         fig2.update_yaxes(title_text='Depth')
