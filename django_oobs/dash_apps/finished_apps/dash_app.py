@@ -596,7 +596,7 @@ def climatology(map_selection, fig, value, date_slider, temp_tabs):
     while True:
         try:
             render_plots(map_selection=map_selection, start_time='2015', end_time=None, zmax=value[1], zmin=value[0], ncontours=40,
-                         directory='CLIM', file_prefix='_CLIM.nc', fig=fig,
+                         directory='TEMP_MC', file_prefix='_CLIM.nc', fig=fig,
                          variable='CLIM', fig2=None, variable_2=None, temp_tabs=temp_tabs)
             fig.update_xaxes(title_text='Time',
                              tickformat="%B")
@@ -675,7 +675,12 @@ def render_plots(map_selection, start_time, end_time, zmax, zmin, ncontours, dir
     #     map_selection = 'TAN100'
     nc_file = xr.open_dataset(nc_files.joinpath(map_selection + file_prefix))
     if temp_tabs != "climatology_tab":
+
         nc_file = nc_file.sel(TIME=slice(start_time, end_time))
+    # else:
+    #     print(start_time)
+    #     print(nc_file['TIME'][-1])
+    #     print(max(nc_file['CLIM']['TIME']))
 
     if vel_tabs == "cross_alongshore_tab":
         nc_file = nc_file.sel(TIME=slice(start_time, end_time))
