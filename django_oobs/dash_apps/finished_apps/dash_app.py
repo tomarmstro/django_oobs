@@ -545,7 +545,7 @@ def cross_along_velocity_tab_content(map_selection, fig, fig2, value, date_slide
     while True:
         try:
             render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40,
-                         directory='VV', file_prefix='_VV_daily.nc', fig=fig, variable='UU', fig2=fig2, variable_2='VV', vel_tabs=vel_tabs)
+                         directory='VV_MC', file_prefix='_VV_daily.nc', fig=fig, variable='UU', fig2=fig2, variable_2='VV', vel_tabs=vel_tabs)
             return \
                 html.Br(), \
                 html.Div(
@@ -571,7 +571,7 @@ def cross_along_velocity_tab_content(map_selection, fig, fig2, value, date_slide
 def north_east_velocity_tab_content(map_selection, fig, fig2, value, date_slider, vel_tabs):
     while True:
         try:
-            render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40, directory='VV', file_prefix='_VV_daily.nc', fig=fig,
+            render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40, directory='VV_MC', file_prefix='_VV_daily.nc', fig=fig,
                          variable='UCUR', fig2=fig2, variable_2='VCUR', vel_tabs=vel_tabs)
             return \
                 html.Br(), \
@@ -684,7 +684,7 @@ def render_plots(map_selection, start_time, end_time, zmax, zmin, ncontours, dir
 
     if vel_tabs == "cross_alongshore_tab":
         nc_file = nc_file.sel(TIME=slice(start_time, end_time))
-        rotated_degs = nc_file[directory].attrs['reference_datum degrees']
+        rotated_degs = nc_file[variable].attrs['reference_datum degrees']
         fig.update_layout(title=f"Daily Cross-Shore Velocity at ({round(rotated_degs)}{DEGREES_SYMBOL} CW from E)")
         fig2.update_layout(title=f"Daily Along-Shore Velocity at ({round(rotated_degs)}{DEGREES_SYMBOL} CW from N)")
     if vel_tabs == "ne_tab":
