@@ -685,7 +685,7 @@ def render_plots(map_selection, start_time, end_time, zmax, zmin, ncontours, dir
     if vel_tabs == "cross_alongshore_tab":
         nc_file = nc_file.sel(TIME=slice(start_time, end_time))
         rotated_degs = nc_file[directory].attrs['reference_datum degrees']
-        fig.update_layout(title=f"Daily Cross-Shore Velocity at ({round(rotated_degs)}{DEGREES_SYMBOL} CW from N)")
+        fig.update_layout(title=f"Daily Cross-Shore Velocity at ({round(rotated_degs)}{DEGREES_SYMBOL} CW from E)")
         fig2.update_layout(title=f"Daily Along-Shore Velocity at ({round(rotated_degs)}{DEGREES_SYMBOL} CW from N)")
     if vel_tabs == "ne_tab":
         nc_file = nc_file.sel(TIME=slice(start_time, end_time))
