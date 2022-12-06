@@ -79,16 +79,30 @@ def render_map():
                     },
         )
         .update_layout(
+
             {
             "font": {"color": "white"},
             'plot_bgcolor': TRANSPARENT_COLOUR,
             'paper_bgcolor': TRANSPARENT_COLOUR,
             },
-        mapbox_style="open-street-map", height=750, width=960,
+        mapbox_style="white-bg",
+        height=750, width=960,
         # Remove legend
-        showlegend=False, ),
+        showlegend=False,
+        mapbox_layers=[
+            {
+                "below": 'traces',
+                "sourcetype": "raster",
+                "sourceattribution": "United States Geological Survey",
+                "source": [
+                    "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
+                ]
+            }
+        ]
+        ),
         # stop zoomable map
-        config={'scrollZoom': False}
+        config={'scrollZoom': False},
+
         )]
 
 # Get files
@@ -596,7 +610,7 @@ def climatology(map_selection, fig, value, date_slider, temp_tabs):
     while True:
         try:
             render_plots(map_selection=map_selection, start_time='2015', end_time=None, zmax=value[1], zmin=value[0], ncontours=40,
-                         directory='TEMP_MC', file_prefix='_CLIM.nc', fig=fig,
+                         directory='TEMP_MC2', file_prefix='_CLIM.nc', fig=fig,
                          variable='CLIM', fig2=None, variable_2=None, temp_tabs=temp_tabs)
             fig.update_xaxes(title_text='Time',
                              tickformat="%B")
