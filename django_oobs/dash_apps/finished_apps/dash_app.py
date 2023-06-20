@@ -610,7 +610,7 @@ def climatology(map_selection, fig, value, date_slider, temp_tabs):
     while True:
         try:
             render_plots(map_selection=map_selection, start_time='2015', end_time=None, zmax=value[1], zmin=value[0], ncontours=40,
-                         directory='TEMP_MC2', file_prefix='_CLIM.nc', fig=fig,
+                         directory='output/TEMP', file_prefix='_CLIM.nc', fig=fig,
                          variable='CLIM', fig2=None, variable_2=None, temp_tabs=temp_tabs)
             fig.update_xaxes(title_text='Time',
                              tickformat="%B")
@@ -635,7 +635,7 @@ def gridded_temperature(map_selection, fig, value, date_slider, temp_tabs):
     while True:
         try:
             render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=value[1], zmin=value[0], ncontours=40,
-                         directory='CLIM', file_prefix='_TEMP_daily.nc', fig=fig, variable='TEMP', fig2=None,
+                         directory='output/TEMP', file_prefix='_TEMP_daily.nc', fig=fig, variable='TEMP', fig2=None,
                          variable_2=None, temp_tabs=temp_tabs)
             fig.update_layout(
                 height=450)
@@ -663,7 +663,7 @@ def anomaly(map_selection, fig, value, date_slider, temp_tabs):
     while True:
         try:
             render_plots(map_selection=map_selection, start_time=str(date_slider[0]), end_time=str(date_slider[1]), zmax=2.5, zmin=-2.5, ncontours=20,
-                         directory='CLIM', file_prefix='_TEMP_daily.nc', fig=fig, variable='CLIM', fig2=None, variable_2='TEMP', temp_tabs=temp_tabs)
+                         directory='output/TEMP', file_prefix='_TEMP_daily.nc', fig=fig, variable='CLIM', fig2=None, variable_2='TEMP', temp_tabs=temp_tabs)
             fig.update_xaxes(title_text='Time',
                              # tickformat="%B"
                              )
